@@ -41,9 +41,9 @@ export const addShelf = createServerFn({ method: "POST" })
     const { supabase } = context;
     const { generateCatalogue, generateReview } = await import("./anthropic.server");
 
-    const { data: existing } = await supabase.from("books").select("title").eq("department", data.department);
+    const { data: existing } = await supabase.from("books").select("title").eq("department", department);
     const entries = await generateCatalogue(
-      data.department,
+      department,
       (existing ?? []).map((b) => b.title),
       data.count,
     );
@@ -88,7 +88,7 @@ export const addShelf = createServerFn({ method: "POST" })
         pages: e.pages,
         department,
         spine_color: e.spine_color,
-        review: reviews[i],
+        review: reviews[i] ?? null,
       })),
     );
     if (insertErr) throw new Error(insertErr.message);
