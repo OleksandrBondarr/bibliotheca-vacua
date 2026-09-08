@@ -46,7 +46,12 @@ export const getHall = createServerFn({ method: "GET" }).handler(async () => {
   const [total, taken, arrivals, featured, ...deptResults] = await Promise.all([
     db.from("books").select("id", { count: "exact", head: true }),
     db.from("books").select("id", { count: "exact", head: true }).eq("status", "taken_forever"),
-    db.from("books").select(SPINE_COLUMNS).order("created_at", { ascending: false }).limit(18),
+    db
+      .from("books")
+      .select(SPINE_COLUMNS)
+      .eq("featured", false)
+      .order("created_at", { ascending: false })
+      .limit(18),
     db.from("books").select(SPINE_COLUMNS).eq("featured", true).order("created_at", { ascending: true }),
     ...deptSlugs.map((slug) =>
       db
