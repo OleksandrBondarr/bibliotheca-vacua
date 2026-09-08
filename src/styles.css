@@ -267,10 +267,6 @@
 .spine-blind {
   filter: drop-shadow(0 1px 0 oklch(1 0 0 / 10%));
 }
-[data-spine-collision="true"] .physical-spine {
-  outline: 2px solid var(--color-destructive);
-  outline-offset: -2px;
-}
 
 @utility reading-text {
   user-select: none;
@@ -392,17 +388,49 @@
   }
 }
 
-@utility vitrine-ribbon {
+@utility vitrine-banner {
   position: absolute !important;
   z-index: 3 !important;
-  top: 9px;
-  left: -24px;
-  width: 86px;
-  height: 10px;
-  transform: rotate(-39deg);
-  background: color-mix(in oklch, var(--color-wood-dark), black 32%);
-  box-shadow: 0 1px 2px oklch(0 0 0 / 45%);
+  top: 27px;
+  left: -52px;
+  display: flex;
+  width: 248px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 20px;
+  transform: rotate(-35deg);
+  font-size: 15px;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px oklch(0 0 0 / 42%);
+  isolation: isolate;
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    left: 0;
+    height: 1px;
+    background: repeating-linear-gradient(to right, currentColor 0 4px, transparent 4px 7px);
+    opacity: 0.8;
+  }
+  &::before { top: 4px; }
+  &::after { bottom: 4px; }
 }
+
+@utility vitrine-banner-paper-warm {
+  background-color: var(--color-paper);
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 3px, color-mix(in oklch, var(--color-paper), var(--color-brass) 5%) 3px 4px),
+    linear-gradient(100deg, var(--color-paper-dark), var(--color-paper) 48%, var(--color-paper-dark));
+}
+@utility vitrine-banner-stitch-red-thread {
+  &::before,
+  &::after { color: var(--color-stamp); }
+}
+@utility vitrine-banner-ink-dark { color: var(--color-ink); }
 
 @utility vitrine-label {
   width: 156px;

@@ -14,7 +14,15 @@ export type VitrineTheme = {
     heading: string;
     caption: string;
   };
-  ribbon: boolean;
+  banner: {
+    enabled: boolean;
+    text: string;
+    colors: {
+      paper: "warm";
+      stitch: "red-thread";
+      ink: "dark";
+    };
+  };
   glowTint: "warm";
 };
 
@@ -64,7 +72,18 @@ export function Shelf({
           vitrineTheme?.glowTint === "warm" && "vitrine-glow-warm",
         )}
       >
-        {vitrineTheme?.ribbon && <span aria-hidden className="vitrine-ribbon" />}
+        {vitrineTheme?.banner.enabled && (
+          <span
+            className={cn(
+              "vitrine-banner text-small-caps",
+              `vitrine-banner-paper-${vitrineTheme.banner.colors.paper}`,
+              `vitrine-banner-stitch-${vitrineTheme.banner.colors.stitch}`,
+              `vitrine-banner-ink-${vitrineTheme.banner.colors.ink}`,
+            )}
+          >
+            {vitrineTheme.banner.text}
+          </span>
+        )}
         <div
           ref={scroller}
           className={cn(
