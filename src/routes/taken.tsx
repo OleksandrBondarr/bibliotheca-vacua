@@ -7,8 +7,13 @@ import { ogImage } from "@/lib/og-meta";
 import { Frame, Rule } from "@/components/library/Frame";
 
 export const Route = createFileRoute("/taken")({
-  loader: ({ context }) => context.queryClient.ensureQueryData(takenQuery),
-  loader: async () => ({ origin: await getRequestOrigin() }),
+  loader: async ({ context }) => {
+    const [, origin] = await Promise.all([
+      context.queryClient.ensureQueryData(takenQuery),
+      getRequestOrigin(),
+    ]);
+    return { origin };
+  },
   head: ({ loaderData }) => ({
     meta: [
       { title: "Taken forever — Bibliotheca Vacua" },
