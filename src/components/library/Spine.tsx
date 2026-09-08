@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import type { SpineBook } from "@/lib/catalogue.functions";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { houseHash as publisherHash } from "@/lib/binding";
@@ -230,6 +231,17 @@ export function Spine({ book, onLoan = false, setAside = false }: { book: SpineB
     return () => window.removeEventListener("keydown", onKey);
   }, [sheet]);
 
+  useEffect(() => {
+    if (!hover) return;
+    const close = () => setHover(null);
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
+    return () => {
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
+    };
+  }, [hover]);
+
   function openHover() {
     if (isMobile) return;
     if (timer.current) clearTimeout(timer.current);
@@ -237,8 +249,12 @@ export function Spine({ book, onLoan = false, setAside = false }: { book: SpineB
       const r = ref.current?.getBoundingClientRect();
       if (!r) return;
       const cardWidth = 288;
-      const left = Math.min(r.right + 10, window.innerWidth - cardWidth - 12);
-      const top = Math.max(12, Math.min(r.top, window.innerHeight - 320));
+      const cardHeight = 340;
+      const roomOnRight = window.innerWidth - r.right;
+      const left = roomOnRight >= cardWidth + 22
+        ? r.right + 10
+        : Math.max(12, r.left - cardWidth - 10);
+      const top = Math.max(12, Math.min(r.top, window.innerHeight - cardHeight - 12));
       setHover({ left, top });
     }, 250);
   }
@@ -311,15 +327,16 @@ export function Spine({ book, onLoan = false, setAside = false }: { book: SpineB
         </Link>
       )}
 
-      {hover && !isMobile && (
+       {hover && !isMobile && createPortal(
         <Link
           to="/book/$id"
           params={{ id: book.id }}
-          className="fixed z-50 block w-72 border border-rule shadow-[0_10px_30px_oklch(0_0_0/45%)]"
+           className="fixed z-[100] block w-72 border border-rule shadow-[0_10px_30px_oklch(0_0_0/45%)]"
           style={{ left: hover.left, top: hover.top }}
         >
           <CatalogueCard book={book} />
-        </Link>
+         </Link>,
+         document.body,
       )}
 
       {sheet && isMobile && (

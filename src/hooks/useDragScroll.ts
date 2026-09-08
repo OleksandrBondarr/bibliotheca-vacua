@@ -111,12 +111,25 @@ export function useDragScroll<T extends HTMLElement>() {
       if (state.current.down) e.preventDefault();
     };
 
+    const onWheel = (e: WheelEvent) => {
+      const max = Math.max(0, el.scrollWidth - el.clientWidth);
+      if (max === 0) return;
+      const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? el.clientWidth : 1;
+      const delta = (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) * unit;
+      const next = Math.max(0, Math.min(max, el.scrollLeft + delta));
+      if (next === el.scrollLeft) return;
+      e.preventDefault();
+      stopInertia();
+      el.scrollLeft = next;
+    };
+
     el.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("pointermove", onPointerMove, { passive: false });
     window.addEventListener("pointerup", endDrag);
     window.addEventListener("pointercancel", endDrag);
     el.addEventListener("click", onClickCapture, true);
     el.addEventListener("dragstart", onDragStart);
+    el.addEventListener("wheel", onWheel, { passive: false });
 
     return () => {
       el.removeEventListener("pointerdown", onPointerDown);
@@ -125,6 +138,7 @@ export function useDragScroll<T extends HTMLElement>() {
       window.removeEventListener("pointercancel", endDrag);
       el.removeEventListener("click", onClickCapture, true);
       el.removeEventListener("dragstart", onDragStart);
+      el.removeEventListener("wheel", onWheel);
       stopInertia();
     };
   }, [endDrag, stopInertia]);
