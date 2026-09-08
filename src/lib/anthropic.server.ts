@@ -85,15 +85,27 @@ const DEPARTMENT_BRIEFS: Record<string, string> = {
     "Volumes the library holds but does not lend: sealed minutes, indices of indices, manuals whose instructions must not be followed.",
 };
 
+/** Briefs for the named shelves inside a department. */
+const SHELF_BRIEFS: Record<string, string> = {
+  impossible:
+    "Shelf: Impossible sciences. Scientific monographs, conference proceedings, laboratory notebooks, tables of constants and field guides in physics, biology, mathematics, geology and chemistry, concerning phenomena, organisms, materials or quantities that cannot exist. Full scientific apparatus: methods, tables, footnotes, errata. Playful in conception, entirely serious in manner. HARD RULE: the subject must be plainly impossible; never real diseases, real drugs, real medical, pharmacological, dietary or safety claims, and nothing a reader could mistake for real science or act upon.",
+  not_yet:
+    "Shelf: Sciences not yet made. Hypothetical but plausible future discoveries, instruments, frameworks and reinterpretations — the kind of work a serious futurologist would expect to appear between 2035 and 2071: new fields and sub-disciplines, new instruments and methods, new mathematical or informational frameworks, reinterpretations across physics, biology, mathematics, information, materials and cognition. The purpose is to inspire a thoughtful, intellectual reader. HARD RULES: every book is dated between 2036 and 2071 inclusive. Titles and matter concern ideas, reasoning, consequences and controversies — never invented numeric results, datasets, dosages or efficacy figures, and nothing touching real diseases, real drugs, or real medical or safety matters. No real scientists, real institutions or real journals.",
+};
+
 export async function generateCatalogue(
   department: string,
   existingTitles: string[],
   count = 14,
+  shelf?: string,
 ): Promise<CatalogueEntry[]> {
   const system = `You are the chief cataloguer of the Bibliotheca Vacua, an old and serious library. You invent books that are plausible yet strange: they must read like real entries in a catalogue of a real library, never like jokes or marketing. Never use names of real people, real publishers, or real books. Never mention that anything is invented. Return strict JSON only.`;
 
+  const shelfBrief = shelf ? SHELF_BRIEFS[shelf] : undefined;
+  const yearRange = shelf === "not_yet" ? "integer between 2036 and 2071" : "integer between 1958 and 2071";
+
   const user = `Department: ${department}.
-Brief: ${DEPARTMENT_BRIEFS[department] ?? ""}
+Brief: ${shelfBrief ?? DEPARTMENT_BRIEFS[department] ?? ""}
 
 Produce exactly ${count} books as a JSON array. Each element:
 {
@@ -103,7 +115,7 @@ Produce exactly ${count} books as a JSON array. Each element:
   "publisher_name": string (invented small press; reuse a name for 2–3 books so a house has a character),
   "publisher_city": string,
   "publisher_note": string (one sentence on the house's character and typography),
-  "year": integer between 1958 and 2071,
+  "year": ${yearRange},
   "pages": integer between 64 and 420,
   "spine_color": hex colour, muted and bookish (deep reds, bottle greens, slate blues, ochres, aubergines, near-blacks; never neon)
 }
@@ -112,16 +124,18 @@ Output the JSON array and nothing else.`;
 
   const text = await askClaude(system, user, 6000);
   const entries = extractJson<CatalogueEntry[]>(text);
+  const [loYear, hiYear] = shelf === "not_yet" ? [2036, 2071] : [1958, 2071];
   return entries
     .filter((e) => e && e.title && e.author)
     .map((e) => ({
       ...e,
-      year: clamp(Math.round(Number(e.year) || 1990), 1958, 2071),
+      year: clamp(Math.round(Number(e.year) || (shelf === "not_yet" ? 2049 : 1990)), loYear, hiYear),
       pages: clamp(Math.round(Number(e.pages) || 200), 64, 420),
       spine_color: /^#[0-9a-f]{6}$/i.test(e.spine_color ?? "") ? e.spine_color : "#5a4a3a",
       kind: e.kind || "Book",
     }));
 }
+
 
 /* ------------------------------------------------------------------ */
 /* Review                                                              */
@@ -134,14 +148,17 @@ export type BookForPrompt = {
   year: number;
   pages: number;
   department: string;
+  shelf?: string | null;
   publisher?: { name: string; city: string; style_note: string | null } | null;
 };
 
 export async function generateReview(book: BookForPrompt, depth: "standard" | "deep" = "standard"): Promise<string> {
   const system =
-    book.department === "sciences"
-      ? `You are a reviewer for a learned scientific journal, writing the review notice of a monograph. Your tone is dry, precise and collegial, with the faintest professional impatience; you weigh method, evidence, tables and apparatus before style. You never hint that the book is invented; it simply exists in the literature. You never mention real people, real institutions, real journals or real books, and you never state anything a reader could take as a real medical, pharmacological or safety claim — the subject of the book is plainly impossible. No headings, no bullet points. Plain paragraphs separated by blank lines.`
-      : `You are a senior critic writing for a serious literary review. You write about books that have long been published and argued over. Your tone is calm, exact, slightly ironic, never gushing. You never hint that a book is invented or fictional; it simply exists. You never mention real people, real critics, real institutions, or real books. No headings, no bullet points, no quotation of the book longer than a phrase. Plain paragraphs separated by blank lines.`;
+    book.department === "sciences" && book.shelf === "not_yet"
+      ? `You are a reviewer for a learned scientific journal in the year ${book.year}, writing the review notice of a book published that year. The work proposes a new field, instrument, framework or reinterpretation; you weigh its reasoning, its consequences and the controversy around it. Your tone is dry, precise, collegial and intellectually generous. You never hint that the book is invented; it simply exists in the literature of its decade. HARD RULES: discuss ideas, arguments, consequences and disputes only — never cite numeric results, datasets, measurements, dosages or efficacy figures, never touch real diseases, real drugs, or real medical or safety matters, and never name real scientists, real institutions or real journals. No headings, no bullet points. Plain paragraphs separated by blank lines.`
+      : book.department === "sciences"
+        ? `You are a reviewer for a learned scientific journal, writing the review notice of a monograph. Your tone is dry, precise and collegial, with the faintest professional impatience; you weigh method, evidence, tables and apparatus before style. You never hint that the book is invented; it simply exists in the literature. You never mention real people, real institutions, real journals or real books, and you never state anything a reader could take as a real medical, pharmacological or safety claim — the subject of the book is plainly impossible. No headings, no bullet points. Plain paragraphs separated by blank lines.`
+        : `You are a senior critic writing for a serious literary review. You write about books that have long been published and argued over. Your tone is calm, exact, slightly ironic, never gushing. You never hint that a book is invented or fictional; it simply exists. You never mention real people, real critics, real institutions, or real books. No headings, no bullet points, no quotation of the book longer than a phrase. Plain paragraphs separated by blank lines.`;
 
   const length =
     depth === "deep"
@@ -153,12 +170,13 @@ export async function generateReview(book: BookForPrompt, depth: "standard" | "d
 Title: ${book.title}
 Author: ${book.author}
 Kind: ${book.kind}
-Department: ${book.department}
+Department: ${book.department}${book.shelf ? `\nShelf: ${book.shelf}` : ""}
 Publisher: ${book.publisher?.name ?? "unknown"}, ${book.publisher?.city ?? ""} (${book.publisher?.style_note ?? ""})
 Year: ${book.year}
 Pages: ${book.pages}
 
 ${length} Write as if every reader already knows the book. Output the paragraphs only.`;
+
 
   return askClaude(system, user, depth === "deep" ? 1600 : 1200);
 }
@@ -221,9 +239,15 @@ export async function generatePage(args: {
         ? "This is the final page of the book. Bring the text to its true last sentence, without summary or moral."
         : `This is page ${pageNumber} of ${totalPages}; the reader is ${Math.round((pageNumber / totalPages) * 100)}% through.`;
 
-  const system = `You are the text of a book. You write exactly one page at a time, in the real voice of the book's genre and author, as it would appear in print. No headings, no page numbers, no summaries, no framing, no commentary, no notes to the reader. Never mention that the book is being written or is invented. Never refer to real people. Continue seamlessly from what came before. Unless this is the final page, the page ends mid-flow, in the middle of a paragraph or even a sentence, as a printed page does.`;
+  const notYet =
+    book.department === "sciences" && book.shelf === "not_yet"
+      ? ` This book was published in ${book.year} and belongs to the shelf of sciences not yet made: concepts and arguments, never invented data. No numeric results, datasets, measurements, dosages or efficacy figures; nothing touching real diseases, real drugs, or real medical or safety matters; no real scientists, institutions or journals.`
+      : "";
+
+  const system = `You are the text of a book. You write exactly one page at a time, in the real voice of the book's genre and author, as it would appear in print. No headings, no page numbers, no summaries, no framing, no commentary, no notes to the reader. Never mention that the book is being written or is invented. Never refer to real people. Continue seamlessly from what came before. Unless this is the final page, the page ends mid-flow, in the middle of a paragraph or even a sentence, as a printed page does.${notYet}`;
 
   const user = `Book: "${book.title}" by ${book.author} (${book.kind}, ${book.year}, ${book.pages} pages). Department: ${book.department}.
+
 
 What critics have said of the book (for voice and matter only, never to be quoted):
 ${review ?? "(no review)"}

@@ -5,7 +5,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { LOAN_DAYS, MAX_ACTIVE_LOANS, MAX_LOANS_PER_DAY } from "./departments";
 
-const BOOK_JOIN = "book:books(id, title, author, kind, year, pages, department, review)";
+const BOOK_JOIN = "book:books(id, title, author, kind, year, pages, department, shelf, review)";
 
 type LoanBook = {
   id: string;
@@ -15,8 +15,10 @@ type LoanBook = {
   year: number;
   pages: number;
   department: string;
+  shelf: string | null;
   review: string | null;
 };
+
 
 /** Expire the caller's overdue loans and wipe their pages. */
 async function expireStaleLoans(supabase: SupabaseClient<Database>, userId: string) {

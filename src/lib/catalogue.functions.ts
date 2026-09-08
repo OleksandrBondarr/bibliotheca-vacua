@@ -13,6 +13,7 @@ export type SpineBook = {
   spine_color: string;
   status: "available" | "taken_forever";
   department: string;
+  shelf: string | null;
   featured: boolean;
   kind: string;
   year: number;
@@ -35,7 +36,8 @@ export type TakenBook = {
 };
 
 const SPINE_COLUMNS =
-  "id, title, author, pages, spine_color, status, department, featured, kind, year, review, publisher:publishers(name, city, style_note)";
+  "id, title, author, pages, spine_color, status, department, shelf, featured, kind, year, review, publisher:publishers(name, city, style_note)";
+
 
 export const getHall = createServerFn({ method: "GET" }).handler(async () => {
   const { createPublicClient } = await import("./public-client.server");
@@ -59,15 +61,29 @@ export const getHall = createServerFn({ method: "GET" }).handler(async () => {
         .select(SPINE_COLUMNS)
         .eq("department", slug)
         .order("created_at", { ascending: false })
-        .limit(14),
+        .limit(slug === "sciences" ? 40 : 14),
     ),
+
   ]);
   if (arrivals.error) throw new Error(arrivals.error.message);
 
-  const departments = deptSlugs.map((slug, i) => ({
-    slug: slug as Department,
-    books: (deptResults[i]?.data ?? []) as SpineBook[],
-  }));
+  const departments = deptSlugs.map((slug, i) => {
+    let books = (deptResults[i]?.data ?? []) as SpineBook[];
+    // Sciences holds two named shelves; the hall shelf shows a mixture of both.
+    if (slug === "sciences") {
+      const a = books.filter((b) => b.shelf !== "not_yet");
+      const bb = books.filter((b) => b.shelf === "not_yet");
+      const mixed: SpineBook[] = [];
+      for (let k = 0; k < Math.max(a.length, bb.length); k++) {
+        if (a[k]) mixed.push(a[k]!);
+        if (bb[k]) mixed.push(bb[k]!);
+      }
+      books = mixed.slice(0, 14);
+    }
+
+    return { slug: slug as Department, books };
+  });
+
 
   return {
     total: total.count ?? 0,

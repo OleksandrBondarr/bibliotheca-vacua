@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { SpineBook } from "@/lib/catalogue.functions";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { houseHash as publisherHash } from "@/lib/binding";
@@ -47,39 +47,53 @@ function houseHash(book: SpineBook) {
   return publisherHash(book.publisher?.name ?? null);
 }
 
+/** Small paper slip near the foot of the spine. */
+function Slip({ children }: { children: ReactNode }) {
+  return (
+    <span
+      aria-hidden
+      className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 border border-[oklch(0_0_0/25%)] bg-paper px-1 text-[9px] leading-[1.4] tabular-nums text-ink"
+    >
+      {children}
+    </span>
+  );
+}
+
 /** Binding decoration drawn over the spine colour. */
 function Binding({ book, style, height }: { book: SpineBook; style: number; height: number }) {
   const gilt = "oklch(0.82 0.09 82 / 70%)";
   const dark = "oklch(0 0 0 / 30%)";
   const light = "oklch(1 0 0 / 14%)";
+  // Books on the "sciences not yet made" shelf carry their year on the slip.
+  const yearSlip = book.shelf === "not_yet" ? <Slip>{book.year}</Slip> : null;
 
   if (style === 0)
     return (
       <span aria-hidden className="pointer-events-none absolute inset-0">
         <span className="absolute inset-x-[3px] top-[10px] h-px" style={{ background: gilt }} />
         <span className="absolute inset-x-[3px] top-[14px] h-px" style={{ background: gilt }} />
-        <span className="absolute inset-x-[3px] bottom-[10px] h-px" style={{ background: gilt }} />
-        <span className="absolute inset-x-[3px] bottom-[14px] h-px" style={{ background: gilt }} />
+        {yearSlip ?? (
+          <>
+            <span className="absolute inset-x-[3px] bottom-[10px] h-px" style={{ background: gilt }} />
+            <span className="absolute inset-x-[3px] bottom-[14px] h-px" style={{ background: gilt }} />
+          </>
+        )}
       </span>
     );
 
   if (style === 1)
-    return (
-      <span
-        aria-hidden
-        className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 border border-[oklch(0_0_0/25%)] bg-paper px-1 text-[9px] leading-[1.4] tabular-nums text-ink"
-      >
-        {String(200 + (houseHash(book) + book.pages) % 8800)}
-      </span>
-    );
+    return <Slip>{yearSlip ? book.year : String(200 + ((houseHash(book) + book.pages) % 8800))}</Slip>;
+
 
   if (style === 2)
     return (
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0"
-        style={{ top: Math.round(height * 0.16), height: Math.round(height * 0.3), background: dark }}
-      />
+      <span aria-hidden className="pointer-events-none absolute inset-0">
+        <span
+          className="absolute inset-x-0"
+          style={{ top: Math.round(height * 0.16), height: Math.round(height * 0.3), background: dark }}
+        />
+        {yearSlip}
+      </span>
     );
 
   if (style === 3)
@@ -87,10 +101,12 @@ function Binding({ book, style, height }: { book: SpineBook; style: number; heig
       <span aria-hidden className="pointer-events-none absolute inset-0">
         <span className="absolute inset-x-[4px] top-[9px] h-px" style={{ background: light }} />
         <span className="absolute inset-x-[4px] top-[12px] h-px" style={{ background: light }} />
-        <span
-          className="absolute bottom-3 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 border"
-          style={{ borderColor: gilt }}
-        />
+        {yearSlip ?? (
+          <span
+            className="absolute bottom-3 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 border"
+            style={{ borderColor: gilt }}
+          />
+        )}
       </span>
     );
 
@@ -99,20 +115,24 @@ function Binding({ book, style, height }: { book: SpineBook; style: number; heig
       <span aria-hidden className="pointer-events-none absolute inset-0">
         <span className="absolute inset-x-0 top-0 h-[9px]" style={{ background: light }} />
         <span className="absolute inset-x-0 bottom-0 h-[9px]" style={{ background: light }} />
+        {yearSlip}
       </span>
     );
 
   return (
-    <span
-      aria-hidden
-      className="pointer-events-none absolute inset-0"
-      style={{
-        background:
-          "repeating-linear-gradient(to right, oklch(1 0 0 / 4%) 0 1px, transparent 1px 4px, oklch(0 0 0 / 6%) 4px 5px, transparent 5px 9px)",
-      }}
-    />
+    <span aria-hidden className="pointer-events-none absolute inset-0">
+      <span
+        className="absolute inset-0"
+        style={{
+          background:
+            "repeating-linear-gradient(to right, oklch(1 0 0 / 4%) 0 1px, transparent 1px 4px, oklch(0 0 0 / 6%) 4px 5px, transparent 5px 9px)",
+        }}
+      />
+      {yearSlip}
+    </span>
   );
 }
+
 
 /** Relative luminance of a hex spine colour, so ink can be chosen for contrast. */
 function luminance(hex: string | null) {
@@ -127,22 +147,26 @@ function luminance(hex: string | null) {
 }
 
 /** Vertical space each binding style occupies at head and foot of the spine. */
-function reserve(style: number, height: number) {
-  switch (style) {
-    case 0:
-      return { top: 22, bottom: 22 };
-    case 1:
-      return { top: 14, bottom: 32 };
-    case 2:
-      return { top: Math.round(height * 0.16 + height * 0.3) + 8, bottom: 12 };
-    case 3:
-      return { top: 20, bottom: 28 };
-    case 4:
-      return { top: 18, bottom: 18 };
-    default:
-      return { top: 14, bottom: 14 };
-  }
+function reserve(style: number, height: number, slip: boolean) {
+  const z = (() => {
+    switch (style) {
+      case 0:
+        return { top: 22, bottom: 22 };
+      case 1:
+        return { top: 14, bottom: 32 };
+      case 2:
+        return { top: Math.round(height * 0.16 + height * 0.3) + 8, bottom: 12 };
+      case 3:
+        return { top: 20, bottom: 28 };
+      case 4:
+        return { top: 18, bottom: 18 };
+      default:
+        return { top: 14, bottom: 14 };
+    }
+  })();
+  return slip ? { top: z.top, bottom: Math.max(z.bottom, 32) } : z;
 }
+
 
 export function Spine({ book }: { book: SpineBook }) {
   const isMobile = useIsMobile();
@@ -152,7 +176,7 @@ export function Spine({ book }: { book: SpineBook }) {
   const style = houseHash(book) % 6;
   const pale = luminance(book.spine_color) > 0.45;
   const ink = pale ? "oklch(0.24 0.02 60)" : "oklch(0.93 0.015 85)";
-  const zone = reserve(style, height);
+  const zone = reserve(style, height, book.shelf === "not_yet");
   const bottom = zone.bottom + (taken ? 18 : 0);
   const ref = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);

@@ -122,3 +122,34 @@ export function ShelvesByPublisher({ books }: { books: SpineBook[] }) {
     </div>
   );
 }
+
+/** A department held on named shelves (Sciences): one shelf per name, in order. */
+export function NamedShelves({
+  books,
+  shelves,
+}: {
+  books: SpineBook[];
+  shelves: { key: string; label: string; note: string }[];
+}) {
+  return (
+    <div className="space-y-8">
+      {shelves.map((s) => {
+        const rows = books.filter((b) => (b.shelf ?? shelves[0]?.key) === s.key);
+        return (
+          <Shelf
+            key={s.key}
+            books={rows}
+            empty="This shelf is still being filled."
+            plaque={
+              <Plaque>
+                <span className="text-small-caps text-sm">{s.label}</span>
+                <span className="text-[15px] italic text-hall-foreground/75">{s.note}</span>
+              </Plaque>
+            }
+          />
+        );
+      })}
+    </div>
+  );
+}
+

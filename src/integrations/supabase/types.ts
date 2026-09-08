@@ -27,6 +27,7 @@ export type Database = {
           pages: number
           publisher_id: string | null
           review: string | null
+          shelf: string | null
           spine_color: string
           status: Database["public"]["Enums"]["book_status"]
           title: string
@@ -44,6 +45,7 @@ export type Database = {
           pages: number
           publisher_id?: string | null
           review?: string | null
+          shelf?: string | null
           spine_color?: string
           status?: Database["public"]["Enums"]["book_status"]
           title: string
@@ -61,6 +63,7 @@ export type Database = {
           pages?: number
           publisher_id?: string | null
           review?: string | null
+          shelf?: string | null
           spine_color?: string
           status?: Database["public"]["Enums"]["book_status"]
           title?: string
