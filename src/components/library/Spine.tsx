@@ -73,8 +73,8 @@ function Binding({ style }: { style: number }) {
       <span aria-hidden className="pointer-events-none absolute inset-0">
         <span data-spine-decoration className="spine-gilt absolute inset-x-[3px] top-[8px] h-px" style={{ background: gilt }} />
         <span data-spine-decoration className="spine-gilt absolute inset-x-[3px] top-[11px] h-px" style={{ background: gilt }} />
-        <span data-spine-decoration className="spine-gilt absolute inset-x-[3px] bottom-[26px] h-px" style={{ background: gilt }} />
-        <span data-spine-decoration className="spine-gilt absolute inset-x-[3px] bottom-[29px] h-px" style={{ background: gilt }} />
+        <span data-spine-decoration className="spine-gilt absolute inset-x-[3px] bottom-[30px] h-px" style={{ background: gilt }} />
+        <span data-spine-decoration className="spine-gilt absolute inset-x-[3px] bottom-[33px] h-px" style={{ background: gilt }} />
       </span>
     );
 
@@ -128,7 +128,7 @@ function PublisherMark({ book }: { book: SpineBook }) {
     <span
       aria-hidden
       data-spine-decoration
-      className="spine-blind pointer-events-none absolute bottom-[25px] left-1/2 z-[2] h-2 w-2 -translate-x-1/2 opacity-70"
+      className="spine-blind pointer-events-none absolute bottom-[22px] left-1/2 z-[2] h-2 w-2 -translate-x-1/2 opacity-70"
       style={{ color: markColor }}
     >
       {shape === 0 && <span className="absolute left-0 top-[3px] h-px w-2 bg-current" />}
@@ -195,8 +195,10 @@ export function Spine({ book, onLoan = false, setAside = false }: { book: SpineB
   const style = houseHash(book) % 6;
   const pale = luminance(book.spine_color) > 0.45;
   const ink = pale ? "oklch(0.24 0.02 60)" : "oklch(0.93 0.015 85)";
-  const titleTop = 12;
-  const titleBottom = 34;
+  // The title owns the middle of the spine; decorations live only in the head
+  // and foot zones, so nothing can ever run across the lettering.
+  const titleTop = 11;
+  const titleBottom = style === 0 ? 36 : 32;
   const ref = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hover, setHover] = useState<{ left: number; top: number } | null>(null);
@@ -274,20 +276,37 @@ export function Spine({ book, onLoan = false, setAside = false }: { book: SpineB
     backgroundColor: book.spine_color,
   } as const;
 
+  // Size the lettering to the space available, rather than truncating early.
+  const titleZone = height - titleTop - titleBottom;
+  const titleLen = book.title.length;
+  const titleSize = titleLen * 7 <= titleZone ? 13 : titleLen * 6.2 <= titleZone ? 12 : titleLen * 5.6 <= titleZone ? 11 : 10;
+  const titleLines = titleLen * (titleSize * 0.55) > titleZone ? 2 : 1;
+  const showAuthor = titleLines === 1 && titleLen * (titleSize * 0.55) < titleZone * 0.6 && width >= 46;
+
   const inner = (
     <>
        <span aria-hidden className={cn("spine-material", `spine-material-${material}`, faded && "spine-faded")} />
       <Binding style={style} />
       <span
          data-spine-title
-         className="pointer-events-none absolute inset-x-0 z-[1] flex justify-center overflow-hidden px-1"
+         className="pointer-events-none absolute inset-x-0 z-[1] flex items-center justify-center overflow-hidden px-1"
         style={{ top: titleTop, bottom: titleBottom }}
       >
-        <span
-           className={cn("vertical-text block h-full max-h-full overflow-hidden text-ellipsis whitespace-nowrap text-[12px] leading-none sm:text-[13px]", style === 0 && "spine-title-gilt")}
-          style={{ color: ink }}
-        >
-          {book.title}
+        <span className="flex h-full max-h-full flex-row-reverse items-center justify-center gap-[2px] overflow-hidden">
+          <span
+            className={cn("vertical-text block h-full max-h-full overflow-hidden leading-[1.1]", style === 0 && "spine-title-gilt")}
+            style={{ color: ink, fontSize: titleSize, maxWidth: titleLines * (titleSize + 2), textOverflow: "ellipsis" }}
+          >
+            {book.title}
+          </span>
+          {showAuthor && (
+            <span
+              className="vertical-text block h-full max-h-full overflow-hidden whitespace-nowrap text-[10px] leading-none"
+              style={{ color: ink, opacity: 0.75, textOverflow: "ellipsis" }}
+            >
+              {book.author}
+            </span>
+          )}
         </span>
       </span>
        <Slip>{book.shelf_mark}</Slip>
