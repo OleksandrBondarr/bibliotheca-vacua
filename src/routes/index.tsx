@@ -15,7 +15,15 @@ const LEM_VITRINE_THEME: VitrineTheme = {
     heading: "12 IX 1921 – 27 III 2006 · Kraków",
     caption: "The writer who first described this library.",
   },
-  ribbon: true,
+  banner: {
+    enabled: true,
+    text: "Lem season · 12 September",
+    colors: {
+      paper: "warm",
+      stitch: "red-thread",
+      ink: "dark",
+    },
+  },
   glowTint: "warm",
 };
 

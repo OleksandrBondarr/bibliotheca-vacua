@@ -280,7 +280,7 @@ export function Spine({ book, onLoan = false, setAside = false }: { book: SpineB
 
 
    const shell =
-     "physical-spine relative mt-[6px] flex shrink-0 items-start justify-center overflow-hidden rounded-b-[2px] outline-none focus-visible:ring-2 focus-visible:ring-ring";
+     "physical-spine relative mt-[6px] flex shrink-0 items-start justify-center overflow-hidden rounded-b-[2px] outline-none";
 
   return (
      <div
