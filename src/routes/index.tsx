@@ -2,23 +2,32 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { hallQuery } from "@/lib/catalogue.functions";
 import { DEPARTMENTS } from "@/lib/departments";
+import { getRequestOrigin } from "@/lib/origin.functions";
+import { ogImage } from "@/lib/og-meta";
 import { Frame } from "@/components/library/Frame";
 import { DepartmentShelf, Shelf } from "@/components/library/Shelf";
 import { departmentLabel } from "@/lib/departments";
 
 
 export const Route = createFileRoute("/")({
-  head: () => ({
+  head: ({ loaderData }) => ({
     meta: [
       { title: "Bibliotheca Vacua — a library of books that do not exist" },
       { name: "description", content: "Shelves of invented books. Each is written the moment a reader takes it out, for that reader alone, and vanishes when the loan ends." },
       { property: "og:title", content: "Bibliotheca Vacua" },
       { property: "og:description", content: "A library of books that do not exist." },
       { property: "og:type", content: "website" },
+      ...ogImage(loaderData?.origin, "hall", "/"),
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(hallQuery),
+  loader: async ({ context }) => {
+    const [, origin] = await Promise.all([
+      context.queryClient.ensureQueryData(hallQuery),
+      getRequestOrigin(),
+    ]);
+    return { origin };
+  },
   component: Hall,
   errorComponent: () => (
     <Frame env="hall">
