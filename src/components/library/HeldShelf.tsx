@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useSession } from "@/hooks/useSession";
 import { getHeldShelf, dismissHeldBook } from "@/lib/reader.functions";
 import { takeOutBook } from "@/lib/loans.functions";
+import { NAME_REQUIRED } from "@/lib/profile.functions";
 import { departmentLabel } from "@/lib/departments";
 import { buttonLink } from "@/components/library/Frame";
 import { cn } from "@/lib/utils";
@@ -38,6 +39,9 @@ export function HeldShelf({ heading = true, className }: { heading?: boolean; cl
   const takeM = useMutation({
     mutationFn: (bookId: string) => takeOut({ data: { bookId } }),
     onSuccess: (r) => navigate({ to: "/read/$loanId", params: { loanId: r.loanId } }),
+    onError: (e) => {
+      if (e instanceof Error && e.message.includes(NAME_REQUIRED)) navigate({ to: "/card", search: { name: true } });
+    },
   });
 
   if (!session || !data?.enabled || data.books.length === 0) return null;
