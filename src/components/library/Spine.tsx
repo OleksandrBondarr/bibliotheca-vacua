@@ -208,10 +208,12 @@ export function Spine({ book, onLoan = false, setAside = false }: { book: SpineB
     const title = ref.current.querySelector<HTMLElement>("[data-spine-title]");
     const decorations = ref.current.querySelectorAll<HTMLElement>("[data-spine-decoration]");
     if (!title) return;
-    const titleBox = title.getBoundingClientRect();
+    const titleTopEdge = title.offsetTop;
+    const titleBottomEdge = title.offsetTop + title.offsetHeight;
     const intersects = [...decorations].some((decoration) => {
-      const box = decoration.getBoundingClientRect();
-      return titleBox.left < box.right && titleBox.right > box.left && titleBox.top < box.bottom && titleBox.bottom > box.top;
+      const decorationTop = decoration.offsetTop;
+      const decorationBottom = decoration.offsetTop + decoration.offsetHeight;
+      return titleTopEdge < decorationBottom && titleBottomEdge > decorationTop;
     });
     if (intersects) {
       ref.current.dataset["spineCollision"] = "true";
