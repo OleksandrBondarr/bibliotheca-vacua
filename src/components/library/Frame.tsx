@@ -1,7 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/hooks/useSession";
+import { DEPARTMENTS } from "@/lib/departments";
+import { getReaderCard } from "@/lib/loans.functions";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Page frame: a quiet header with the library's name and two links,
