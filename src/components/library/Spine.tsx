@@ -19,7 +19,7 @@ function imprint(book: SpineBook) {
 function CatalogueCard({ book, onOpen }: { book: SpineBook; onOpen?: () => void }) {
   const snippet = firstSentences(book.review);
   return (
-    <div className="paper bg-paper p-4 text-ink">
+    <div className="bg-paper p-4 text-ink">
       <p className="text-lg leading-snug">{book.title}</p>
       <p className="mt-0.5 text-[15px] text-ink">{book.author}</p>
       <p className="mt-2 text-[15px] leading-snug text-ink-soft">{imprint(book)}</p>
@@ -151,7 +151,7 @@ export function Spine({ book }: { book: SpineBook }) {
             aria-label={book.title}
             className="fixed inset-x-0 bottom-0 z-50 max-h-[80vh] overflow-y-auto border-t border-rule motion-safe:animate-page-in"
           >
-            <CatalogueCard book={book} onOpen={undefined} />
+            <CatalogueCard book={book} />
             <div className="bg-paper px-4 pb-5">
               <Link
                 to="/book/$id"

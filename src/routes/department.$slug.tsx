@@ -3,7 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { departmentQuery } from "@/lib/catalogue.functions";
 import { DEPARTMENTS, isDepartment } from "@/lib/departments";
 import { Frame } from "@/components/library/Frame";
-import { Shelves } from "@/components/library/Shelf";
+import { ShelvesByPublisher } from "@/components/library/Shelf";
 
 export const Route = createFileRoute("/department/$slug")({
   loader: ({ context, params }) => {
@@ -52,7 +52,7 @@ function DepartmentPage() {
           {" "}— {books.length} {books.length === 1 ? "volume" : "volumes"}.
         </p>
       </section>
-      <Shelves books={books} />
+      <ShelvesByPublisher books={books} />
     </Frame>
   );
 }
