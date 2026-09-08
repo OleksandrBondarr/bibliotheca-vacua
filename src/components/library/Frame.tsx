@@ -39,38 +39,59 @@ export function Frame({
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const item = "block py-2 text-base text-muted-foreground hover:text-foreground";
+  const item =
+    "block py-3 text-[17px] text-hall-foreground/75 hover:text-hall-foreground sm:py-2 sm:text-base";
 
   return (
-    <div className={cn(env === "hall" ? "hall" : "paper", "min-h-screen bg-background text-foreground")}>
-      <header className={cn("mx-auto px-5 pt-5 pb-2", narrow ? "max-w-[560px]" : "max-w-5xl")}>
-        <div className="flex items-baseline justify-between">
-          <Link to="/" className="text-small-caps text-sm tracking-widest text-muted-foreground hover:text-foreground">
+    <div className={cn(env === "hall" ? "hall" : "paper", "min-h-screen overflow-x-hidden bg-background text-foreground")}>
+      <header className={cn("relative z-40 mx-auto px-5 pt-5 pb-2", narrow ? "max-w-[560px]" : "max-w-5xl")}>
+        <div className="flex items-baseline justify-between gap-4">
+          <Link to="/" className="text-small-caps min-w-0 truncate text-sm tracking-widest text-muted-foreground hover:text-foreground">
             Bibliotheca Vacua
           </Link>
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
-            className="text-small-caps text-sm tracking-widest text-muted-foreground hover:text-foreground"
+            className="text-small-caps shrink-0 py-1 text-sm tracking-widest text-muted-foreground hover:text-foreground"
           >
             {open ? "Close" : "Menu"}
           </button>
         </div>
 
         {open ? (
-          <nav className="rule-thin mt-3 border-t pt-3">
-            <div className="grid gap-x-8 sm:grid-cols-2">
+          <>
+            <div
+              aria-hidden
+              onClick={() => setOpen(false)}
+              className="fixed inset-0 z-40 bg-[oklch(0_0_0/45%)] sm:bg-transparent"
+            />
+            <nav
+              className={cn(
+                "fixed inset-0 z-50 overflow-y-auto border border-[oklch(0.34_0.02_120)] bg-hall px-5 pb-10 pt-5 text-hall-foreground shadow-[0_10px_30px_oklch(0_0_0/50%)]",
+                "sm:absolute sm:inset-auto sm:right-5 sm:top-full sm:w-[320px] sm:max-w-[320px] sm:rounded-sm sm:px-5 sm:py-4",
+              )}
+            >
+              <div className="mb-4 flex items-baseline justify-between sm:hidden">
+                <span className="text-small-caps text-sm tracking-widest text-hall-foreground/70">Menu</span>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="text-small-caps py-1 text-sm tracking-widest text-hall-foreground/70"
+                >
+                  Close
+                </button>
+              </div>
               <div>
-                <p className="text-small-caps text-xs tracking-widest text-muted-foreground/70">Departments</p>
+                <p className="text-small-caps text-[15px] tracking-widest text-hall-foreground/60 sm:text-xs">Departments</p>
                 {DEPARTMENTS.map((d) => (
                   <Link key={d.slug} to="/department/$slug" params={{ slug: d.slug }} className={item} onClick={() => setOpen(false)}>
                     {d.label}
                   </Link>
                 ))}
               </div>
-              <div>
-                <p className="text-small-caps text-xs tracking-widest text-muted-foreground/70">The library</p>
+              <div className="mt-5 border-t border-[oklch(0.34_0.02_120)] pt-4 sm:mt-4 sm:pt-3">
+                <p className="text-small-caps text-[15px] tracking-widest text-hall-foreground/60 sm:text-xs">The library</p>
                 <Link to="/" className={item} onClick={() => setOpen(false)}>
                   Hall
                 </Link>
@@ -88,7 +109,7 @@ export function Frame({
                 {session ? (
                   <button
                     type="button"
-                    className={cn(item, "text-left")}
+                    className={cn(item, "w-full text-left")}
                     onClick={async () => {
                       setOpen(false);
                       await supabase.auth.signOut();
@@ -98,14 +119,15 @@ export function Frame({
                   </button>
                 ) : null}
               </div>
-            </div>
-          </nav>
+            </nav>
+          </>
         ) : null}
       </header>
       <main className={cn("mx-auto px-5 pb-20", narrow ? "max-w-[560px]" : "max-w-5xl", className)}>{children}</main>
     </div>
   );
 }
+
 
 export function Rule({ className }: { className?: string }) {
   return <div className={cn("rule-thin my-6", className)} />;
