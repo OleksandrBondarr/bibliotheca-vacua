@@ -14,18 +14,35 @@ export function Plaque({ children }: { children: ReactNode }) {
 }
 
 /** A wooden shelf holding a row of spines; scrolls sideways on a phone. */
-export function Shelf({ books, empty, plaque }: { books: SpineBook[]; empty?: ReactNode; plaque?: ReactNode }) {
+export function Shelf({
+  books,
+  empty,
+  plaque,
+  vitrine,
+}: {
+  books: SpineBook[];
+  empty?: ReactNode;
+  plaque?: ReactNode;
+  vitrine?: boolean;
+}) {
   return (
     <div>
       {plaque}
-      <div className={cn("flex items-end gap-[3px] overflow-x-auto px-4 pt-3 [scrollbar-width:thin]", books.length > 0 && "min-h-[208px]")}>
-        {books.length === 0 ? (
-          <p className="pb-4 text-sm italic text-muted-foreground">{empty ?? "The shelf is empty."}</p>
-        ) : (
-          books.map((b) => <Spine key={b.id} book={b} />)
-        )}
+      <div className={cn(vitrine && "vitrine rounded-sm pt-1")}>
+        <div
+          className={cn(
+            "flex items-end gap-[3px] overflow-x-auto px-4 pt-3 [scrollbar-width:thin]",
+            books.length > 0 && "min-h-[208px]",
+          )}
+        >
+          {books.length === 0 ? (
+            <p className="pb-4 text-sm italic text-muted-foreground">{empty ?? "The shelf is empty."}</p>
+          ) : (
+            books.map((b) => <Spine key={b.id} book={b} />)
+          )}
+        </div>
+        <div className="plank h-3.5 rounded-b-sm" />
       </div>
-      <div className="plank h-3.5 rounded-b-sm" />
     </div>
   );
 }

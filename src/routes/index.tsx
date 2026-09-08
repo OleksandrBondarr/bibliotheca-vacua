@@ -32,6 +32,7 @@ function Hall() {
 
   return (
     <Frame env="hall">
+      <div className="hall-light">
       <section className="pt-16 pb-12 text-center">
         <h1 className="mx-auto max-w-xl text-4xl leading-tight [text-wrap:balance] sm:text-5xl">
           A library of books that do not exist
@@ -53,32 +54,36 @@ function Hall() {
             Opened 12 September 2026, for the 105th birthday of the writer who first described this library.
           </p>
         </div>
-        <Shelf books={data.featured} empty="The shelf is being assembled." />
+        <Shelf books={data.featured} empty="The shelf is being assembled." vitrine />
       </section>
 
       <section aria-labelledby="departments" className="mb-14">
         <h2 id="departments" className="mb-3 px-1 text-small-caps text-sm text-muted-foreground">
           Card catalogue
         </h2>
-        <div className="grid grid-cols-2 gap-[3px] sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-[4px] sm:grid-cols-3">
           {DEPARTMENTS.map((d) => (
             <Link
               key={d.slug}
               to="/department/$slug"
               params={{ slug: d.slug }}
-              className="drawer group relative flex min-h-[92px] flex-col justify-between p-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="drawer group relative flex aspect-[2/3] flex-col items-center justify-between rounded-sm p-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <span className="inline-block w-fit border border-brass/60 bg-paper px-2 py-0.5 text-[15px] text-ink">
-                {d.label}
+              <span className="w-full border border-brass/70 bg-brass/10 p-[3px] shadow-[inset_0_1px_0_oklch(1_0_0/12%)]">
+                <span className="block bg-paper px-2 py-1.5 text-center text-ink">
+                  <span className="text-small-caps block text-[15px] leading-tight">{d.label}</span>
+                  <span className="mt-1 block text-[15px] italic leading-tight text-ink-soft">{d.note}</span>
+                </span>
               </span>
-              <span className="flex items-end justify-between">
-                <span className="text-xs italic text-hall-foreground/70">{d.note}</span>
-                <span aria-hidden className="h-2 w-6 rounded-full bg-brass/80 shadow-[0_1px_0_oklch(0_0_0/50%)]" />
-              </span>
+              <span
+                aria-hidden
+                className="mb-1 h-2.5 w-10 rounded-full bg-brass/85 shadow-[0_1px_0_oklch(0_0_0/55%),inset_0_1px_0_oklch(1_0_0/35%)]"
+              />
             </Link>
           ))}
         </div>
       </section>
+
 
       <section aria-labelledby="arrivals" className="mb-14">
         <h2 id="arrivals" className="mb-3 px-1 text-small-caps text-sm text-muted-foreground">
@@ -95,7 +100,7 @@ function Hall() {
           <DepartmentShelf key={d.slug} slug={d.slug} label={departmentLabel(d.slug)} books={d.books} />
         ))}
       </section>
-
+      </div>
     </Frame>
   );
 }
