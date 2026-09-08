@@ -52,12 +52,14 @@ function AuthPage() {
   // Cloudflare Turnstile, managed mode: usually invisible, a challenge only when suspicious.
   useEffect(() => {
     if (!siteKey || sent) return;
+    const key = siteKey;
     let cancelled = false;
     function render() {
       const ts = (window as unknown as { turnstile?: TurnstileApi }).turnstile;
       if (cancelled || !ts || !widgetRef.current || widgetId.current) return;
-      widgetId.current = ts.render(widgetRef.current, { sitekey: siteKey, size: "flexible" });
+      widgetId.current = ts.render(widgetRef.current, { sitekey: key, size: "flexible" });
     }
+
     if ((window as unknown as { turnstile?: TurnstileApi }).turnstile) render();
     else {
       const existing = document.querySelector<HTMLScriptElement>("script[data-turnstile]");
