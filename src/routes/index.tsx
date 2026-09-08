@@ -119,7 +119,7 @@ function Hall() {
             <div aria-hidden className="drawer flex h-[130px] min-w-0 flex-col items-center justify-between rounded-sm p-2 sm:h-[150px]">
               <DrawerFace />
             </div>
-            <div aria-hidden className="drawer hidden h-[150px] min-w-0 flex-col items-center justify-between rounded-sm p-2 sm:flex min-[900px]:hidden">
+            <div aria-hidden className="drawer catalogue-blank-tablet h-[150px] min-w-0 flex-col items-center justify-between rounded-sm p-2">
               <DrawerFace />
             </div>
           </div>

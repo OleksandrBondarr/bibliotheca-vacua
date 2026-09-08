@@ -224,6 +224,13 @@
   }
 }
 
+@utility catalogue-blank-tablet {
+  display: none;
+  @media (min-width: 640px) and (max-width: 899px) {
+    display: flex;
+  }
+}
+
 /* Warm lamp above the hall + vignette toward the edges + fine grain on the wall */
 @utility hall-light {
   position: relative;
