@@ -123,7 +123,64 @@ export function Spine({ book }: { book: SpineBook }) {
   const taken = book.status === "taken_forever";
   const style = houseHash(book) % 6;
   const titleTop = [12, 14, Math.round(height * 0.5), 20, 16, 14][style] ?? 12;
+  const ref = useRef<HTMLDivElement>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [hover, setHover] = useState<{ left: number; top: number } | null>(null);
+  const [sheet, setSheet] = useState(false);
 
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+
+  useEffect(() => {
+    if (!sheet) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setSheet(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [sheet]);
+
+  function openHover() {
+    if (isMobile) return;
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      const r = ref.current?.getBoundingClientRect();
+      if (!r) return;
+      const cardWidth = 288;
+      const left = Math.min(r.right + 10, window.innerWidth - cardWidth - 12);
+      const top = Math.max(12, Math.min(r.top, window.innerHeight - 320));
+      setHover({ left, top });
+    }, 250);
+  }
+
+  function closeHover() {
+    if (timer.current) clearTimeout(timer.current);
+    setHover(null);
+  }
+
+  const label = `${book.title}, ${book.author}${taken ? " (taken forever)" : ""}`;
+  const spineStyle = {
+    height,
+    width,
+    backgroundColor: book.spine_color,
+    boxShadow:
+      "inset 3px 0 0 oklch(1 0 0 / 26%), inset 5px 0 0 oklch(1 0 0 / 10%), inset -3px 0 0 oklch(0 0 0 / 45%), 0 2px 3px oklch(0 0 0 / 40%)",
+  } as const;
+
+  const inner = (
+    <>
+      <Binding book={book} style={style} height={height} />
+      <span
+        className="vertical-text relative z-[1] text-[12px] leading-none text-spine-ink sm:text-[13px]"
+        style={{ paddingTop: titleTop, maxHeight: height - titleTop - 8, display: "block", overflow: "hidden" }}
+      >
+        <span className="block truncate" style={{ maxHeight: height - titleTop - 8 }}>
+          {book.title}
+          <span className="opacity-70">&nbsp;·&nbsp;{book.author}</span>
+        </span>
+      </span>
+    </>
+  );
+
+  const shell =
+    "relative flex shrink-0 items-start justify-center overflow-hidden rounded-[2px] outline-none transition-transform focus-visible:ring-2 focus-visible:ring-ring motion-safe:hover:-translate-y-1";
 
   return (
     <div ref={ref} className="relative shrink-0" onMouseEnter={openHover} onMouseLeave={closeHover}>
