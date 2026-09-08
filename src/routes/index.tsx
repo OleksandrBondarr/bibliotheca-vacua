@@ -105,7 +105,7 @@ function Hall() {
           Card catalogue
         </h2>
         <div className="rounded-sm border border-wood-light/40 bg-wood-dark/40 p-1 shadow-[inset_0_1px_0_oklch(1_0_0/6%),0_4px_12px_oklch(0_0_0/35%)]">
-          <div className="grid grid-cols-2 gap-[3px] sm:grid-cols-3 min-[900px]:grid-cols-4">
+          <div className="catalogue-grid grid gap-[3px]">
             {DEPARTMENTS.map((d) => (
               <Link
                 key={d.slug}
