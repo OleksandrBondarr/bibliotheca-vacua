@@ -5,6 +5,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { LOAN_DAYS, MAX_ACTIVE_LOANS, MAX_LOANS_PER_DAY } from "./departments";
 import { noteSignal } from "./reader.functions";
+import { NAME_REQUIRED } from "./profile.functions";
 
 const BOOK_JOIN = "book:books(id, title, author, kind, year, pages, department, shelf, review)";
 
@@ -251,6 +252,7 @@ export const requestKeep = createServerFn({ method: "POST" })
       .insert({ user_id: userId, loan_id: data.loanId, email: data.email.trim().toLowerCase() });
     if (error) throw new Error(error.message);
     const kb = loan.book as unknown as { id: string; department: string } | null;
+    if (kb?.id) await supabase.rpc("note_keep_name", { _book_id: kb.id });
     await noteSignal(supabase as never, userId, "kept", { department: kb?.department, bookId: kb?.id });
     return { ok: true };
   });
