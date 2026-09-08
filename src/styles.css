@@ -276,6 +276,12 @@
 }
 
 /* Shelves scroll sideways with no native scrollbar; a thin one appears on hover (desktop) */
+/* While a shelf is being dragged, spines must not take clicks or hover. */
+.shelf-dragging a,
+.shelf-dragging button {
+  pointer-events: none;
+}
+
 @utility shelf-scroll {
   overflow-x: auto;
   scrollbar-width: none;

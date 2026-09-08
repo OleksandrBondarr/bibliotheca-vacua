@@ -163,9 +163,9 @@ const CARD_LAWS = `The laws of the catalogue card:
 1. FIRST SENTENCE: one concrete, strange, specific detail from inside the book. Never an evaluation, never "a novel about", never the author's name, never the word "book". Register to aim for: "The bookkeeper of a provincial theatre notices that the season's ticket sales equal the number of townspeople who died that year."
 2. Leave exactly ONE question the card raises and does not answer — one that only reading the book can settle. Do not answer it later in the review.
 3. Mention ONE famous passage by where it stands and what it does, without quoting it: "the ninth chapter, where he deduces a staircase from the way a maid carries a tray".
-4. Name ONE dispute among critics, plainly enough that the reader wants to take a side.
-5. Hide the ending: refer to it obliquely — never describe it, never say what happens, never call it a twist.
-6. Give the reader ONE idea to carry away: something they could apply to their own thinking or life. This is the library's purpose — to inspire, to teach thinking, to find the non-obvious, to say the unexplainable.
+4. Name ONE dispute among critics — the readers are divided — and take a side lightly, in a clause, without settling it.
+5. Withhold the ending. Refer to it only as a place in the book, in the manner of "the last chapter, which readers are asked not to describe". Never say what happens, never call it a twist.
+6. CLOSE on one idea the reader carries away into their own life: a way of seeing, never a moral, never advice, never a summary of the book. This is the library's purpose — to teach thinking and to find the non-obvious.
 7. VOICE: calm, exact, slightly ironic. No gushing, no superlatives, none of "brilliant", "masterpiece", "unforgettable", "tour de force", "haunting", "luminous". No headings, no bullets, no lists.
 8. Never hint that the book is invented, and never name real people, real critics, real institutions or real books.`;
 

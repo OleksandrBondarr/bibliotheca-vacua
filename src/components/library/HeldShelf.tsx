@@ -6,6 +6,7 @@ import { getHeldShelf, dismissHeldBook } from "@/lib/reader.functions";
 import { takeOutBook } from "@/lib/loans.functions";
 import { departmentLabel } from "@/lib/departments";
 import { buttonLink } from "@/components/library/Frame";
+import { cn } from "@/lib/utils";
 import type { SpineBook } from "@/lib/catalogue.functions";
 
 function firstSentences(review: string | null, n = 2) {
@@ -14,7 +15,7 @@ function firstSentences(review: string | null, n = 2) {
 }
 
 /** The reader's private short shelf. Anonymous visitors see nothing of it. */
-export function HeldShelf({ heading = true }: { heading?: boolean }) {
+export function HeldShelf({ heading = true, className }: { heading?: boolean; className?: string }) {
   const session = useSession();
   const fetchShelf = useServerFn(getHeldShelf);
   const qc = useQueryClient();
@@ -41,8 +42,8 @@ export function HeldShelf({ heading = true }: { heading?: boolean }) {
   if (!session || !data?.enabled || data.books.length === 0) return null;
 
   return (
-    <section className="mt-14">
-      {heading && <h2 className="text-small-caps text-sm text-muted-foreground">Held for you</h2>}
+    <section className={cn("mt-14", className)}>
+      {heading && <h2 className="text-small-caps text-sm text-muted-foreground">Set aside for you</h2>}
       <p className="mt-2 italic text-muted-foreground">The librarian has set these aside for you.</p>
       {data.note && <p className="mt-2 max-w-prose text-sm text-muted-foreground">{data.note}</p>}
       <ul className="mt-5 space-y-4">

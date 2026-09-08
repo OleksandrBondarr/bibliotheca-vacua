@@ -6,6 +6,7 @@ import { z } from "zod";
 import { bookQuery } from "@/lib/catalogue.functions";
 import { getRequestOrigin } from "@/lib/origin.functions";
 import { ShareLine } from "@/components/library/Share";
+import { ReviewEnd } from "@/components/library/ReviewEnd";
 import { takeOutBook } from "@/lib/loans.functions";
 import { departmentLabel, LOAN_DAYS } from "@/lib/departments";
 import { useSession } from "@/hooks/useSession";
@@ -136,7 +137,11 @@ function BookPage() {
       <Rule />
 
       {book.review ? (
-        <Prose text={book.review} />
+        <>
+          <Prose text={book.review} />
+          <ReviewEnd bookId={book.id} department={book.department} />
+        </>
+
       ) : (
         <p className="italic text-muted-foreground">The review has not yet been written.</p>
       )}
