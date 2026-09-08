@@ -100,7 +100,7 @@ function Hall() {
           <DepartmentShelf key={d.slug} slug={d.slug} label={departmentLabel(d.slug)} books={d.books} />
         ))}
       </section>
-
+      </div>
     </Frame>
   );
 }
