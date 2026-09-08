@@ -8,6 +8,7 @@ import { getRequestOrigin } from "@/lib/origin.functions";
 import { ShareLine } from "@/components/library/Share";
 import { ReviewEnd } from "@/components/library/ReviewEnd";
 import { takeOutBook } from "@/lib/loans.functions";
+import { NAME_REQUIRED } from "@/lib/profile.functions";
 import { departmentLabel, LOAN_DAYS } from "@/lib/departments";
 import { useSession } from "@/hooks/useSession";
 import { useTrackSignal } from "@/hooks/useTrackSignal";
@@ -102,6 +103,10 @@ function BookPage() {
       const res = await takeOut({ data: { bookId: book.id } });
       navigate({ to: "/read/$loanId", params: { loanId: res.loanId } });
     } catch (e) {
+      if (e instanceof Error && e.message.includes(NAME_REQUIRED)) {
+        navigate({ to: "/card", search: { name: true } });
+        return;
+      }
       setError(e instanceof Error ? e.message : "The book could not be issued.");
       setBusy(false);
     }

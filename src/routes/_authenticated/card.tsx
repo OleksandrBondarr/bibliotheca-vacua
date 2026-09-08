@@ -1,12 +1,16 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { z } from "zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { getReaderCard } from "@/lib/loans.functions";
 import { Frame, Rule, buttonLink } from "@/components/library/Frame";
 import { HeldShelf } from "@/components/library/HeldShelf";
+import { setDisplayName, displayNameSchema } from "@/lib/profile.functions";
 
 export const Route = createFileRoute("/_authenticated/card")({
+  validateSearch: (s) => z.object({ name: z.boolean().optional() }).parse(s),
   head: () => ({
     meta: [
       { title: "Your reader's card — Bibliotheca Vacua" },
@@ -26,11 +30,68 @@ function daysLeft(iso: string) {
   return Math.max(0, Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000));
 }
 
+function NameField({ current, prompt }: { current: string | null; prompt: boolean }) {
+  const save = useServerFn(setDisplayName);
+  const qc = useQueryClient();
+  const [value, setValue] = useState(current ?? "");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => setValue(current ?? ""), [current]);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const parsed = displayNameSchema.safeParse(value);
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? "That name will not do.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await save({ data: { name: parsed.data } });
+      await qc.invalidateQueries({ queryKey: ["reader-card"] });
+      setSaved(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "The name could not be entered.");
+    }
+    setBusy(false);
+  }
+
+  return (
+    <form onSubmit={submit} className="mt-8 border border-border p-5">
+      <label className="block">
+        <span className="text-small-caps text-sm text-muted-foreground">What should we call you?</span>
+        <input
+          value={value}
+          onChange={(e) => { setValue(e.target.value); setSaved(false); }}
+          maxLength={24}
+          placeholder="Anna, or Anna K."
+          className="mt-1 w-full border-b border-foreground bg-transparent py-2 text-lg outline-none placeholder:text-muted-foreground/60"
+        />
+      </label>
+      <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
+        A first name, or a name and an initial (2–24 characters). It is printed on your card, at the foot of every page written for you, and in the register of books kept forever.
+      </p>
+      {prompt && !current && (
+        <p className="mt-2 text-[15px] italic text-destructive">A name is needed before the first book can be issued.</p>
+      )}
+      {error && <p className="mt-2 text-[15px] text-destructive">{error}</p>}
+      {saved && <p className="mt-2 text-[15px] italic text-muted-foreground">Entered on your card.</p>}
+      <button type="submit" disabled={busy} className="mt-4 w-full border border-foreground px-5 py-3 text-base hover:bg-accent disabled:opacity-50 sm:w-auto">
+        {busy ? "Entering…" : current ? "Change the name" : "Enter the name"}
+      </button>
+    </form>
+  );
+}
+
 function CardPage() {
   const fetchCard = useServerFn(getReaderCard);
   const { data, isPending, error } = useQuery({ queryKey: ["reader-card"], queryFn: () => fetchCard() });
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const { name: namePrompt } = Route.useSearch();
 
   async function signOut() {
     await qc.cancelQueries();
@@ -51,7 +112,7 @@ function CardPage() {
         <>
           <div className="relative border border-foreground/70 bg-paper-dark/40 p-6">
             <p className="text-small-caps text-xs text-muted-foreground">Bibliotheca Vacua · Reader</p>
-            <p className="mt-3 text-2xl">{data.profile?.display_name ?? "Reader"}</p>
+            <p className="mt-3 text-2xl">{data.profile?.display_name || "Unnamed reader"}</p>
             <dl className="mt-4 grid grid-cols-2 gap-y-1 text-sm">
               <dt className="text-muted-foreground">Card no.</dt>
               <dd className="tabular-nums">{data.profile?.card_number}</dd>
@@ -65,6 +126,8 @@ function CardPage() {
               </div>
             )}
           </div>
+
+          <NameField current={data.profile?.display_name ?? null} prompt={Boolean(namePrompt)} />
 
           <div className="mt-4 flex justify-between text-sm">
             {data.isAdmin ? (

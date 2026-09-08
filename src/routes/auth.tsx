@@ -1,9 +1,17 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { getAuthConfig, requestMagicLink } from "@/lib/auth.functions";
 import { useSession } from "@/hooks/useSession";
 import { Frame, Rule, buttonPrimary } from "@/components/library/Frame";
+
+type TurnstileApi = {
+  render: (el: HTMLElement, opts: { sitekey: string; size?: string }) => string;
+  getResponse: (id?: string) => string | undefined;
+  reset: (id?: string) => void;
+};
 
 const searchSchema = z.object({ redirect: z.string().optional() });
 
@@ -34,6 +42,40 @@ function AuthPage() {
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fetchConfig = useServerFn(getAuthConfig);
+  const sendLink = useServerFn(requestMagicLink);
+  const { data: config } = useQuery({ queryKey: ["auth-config"], queryFn: () => fetchConfig(), staleTime: Infinity });
+  const siteKey = config?.siteKey ?? null;
+  const widgetRef = useRef<HTMLDivElement>(null);
+  const widgetId = useRef<string | null>(null);
+
+  // Cloudflare Turnstile, managed mode: usually invisible, a challenge only when suspicious.
+  useEffect(() => {
+    if (!siteKey || sent) return;
+    const key = siteKey;
+    let cancelled = false;
+    function render() {
+      const ts = (window as unknown as { turnstile?: TurnstileApi }).turnstile;
+      if (cancelled || !ts || !widgetRef.current || widgetId.current) return;
+      widgetId.current = ts.render(widgetRef.current, { sitekey: key, size: "flexible" });
+    }
+
+    if ((window as unknown as { turnstile?: TurnstileApi }).turnstile) render();
+    else {
+      const existing = document.querySelector<HTMLScriptElement>("script[data-turnstile]");
+      if (existing) existing.addEventListener("load", render);
+      else {
+        const script = document.createElement("script");
+        script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+        script.async = true;
+        script.defer = true;
+        script.dataset["turnstile"] = "true";
+        script.addEventListener("load", render);
+        document.head.appendChild(script);
+      }
+    }
+    return () => { cancelled = true; };
+  }, [siteKey, sent]);
 
   useEffect(() => {
     if (session) navigate({ to: safePath(redirect), replace: true });
@@ -44,13 +86,22 @@ function AuthPage() {
     setBusy(true);
     setError(null);
     const target = safePath(redirect);
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: { emailRedirectTo: `${window.location.origin}/auth?redirect=${encodeURIComponent(target)}` },
-    });
+    const ts = (window as unknown as { turnstile?: TurnstileApi }).turnstile;
+    const token = siteKey ? ts?.getResponse(widgetId.current ?? undefined) ?? null : null;
+    try {
+      await sendLink({
+        data: {
+          email: email.trim(),
+          token,
+          redirectTo: `${window.location.origin}/auth?redirect=${encodeURIComponent(target)}`,
+        },
+      });
+      setSent(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "The letter could not be sent.");
+      if (siteKey && ts) ts.reset(widgetId.current ?? undefined);
+    }
     setBusy(false);
-    if (error) setError(error.message);
-    else setSent(true);
   }
 
   return (
@@ -80,6 +131,7 @@ function AuthPage() {
               placeholder="reader@example.org"
             />
           </label>
+          <div ref={widgetRef} className="min-h-0" />
           <button type="submit" disabled={busy} className={buttonPrimary}>
             {busy ? "Sending…" : "Send me a sign-in link"}
           </button>
