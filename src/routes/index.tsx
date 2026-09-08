@@ -68,7 +68,7 @@ function Hall() {
 
   return (
     <Frame env="hall">
-      <div className="hall-light">
+      <div>
       <section className="pt-16 pb-12 text-center">
         <h1 className="mx-auto max-w-xl text-4xl leading-tight [text-wrap:balance] sm:text-5xl">
           A library of books that do not exist

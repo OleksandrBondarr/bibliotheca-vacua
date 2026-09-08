@@ -45,7 +45,10 @@ export function useDragScroll<T extends HTMLElement>() {
         s.frame = 0;
         return;
       }
-      el.scrollLeft -= v * 16;
+       const next = el.scrollLeft - v * 16;
+       const max = Math.max(0, el.scrollWidth - el.clientWidth);
+       if (next < 0 || next > max) v *= -0.18;
+       el.scrollLeft = Math.max(0, Math.min(max, next));
       s.frame = requestAnimationFrame(step);
     };
     s.frame = requestAnimationFrame(step);
@@ -86,7 +89,10 @@ export function useDragScroll<T extends HTMLElement>() {
       }
       if (!s.dragging) return;
       e.preventDefault();
-      el.scrollLeft = s.startScroll - dx;
+       const max = Math.max(0, el.scrollWidth - el.clientWidth);
+       const raw = s.startScroll - dx;
+       const resisted = raw < 0 ? raw * 0.18 : raw > max ? max + (raw - max) * 0.18 : raw;
+       el.scrollLeft = Math.max(0, Math.min(max, resisted));
       const now = performance.now();
       const dt = now - s.lastAt;
       if (dt > 0) s.velocity = (e.clientX - s.lastX) / dt;

@@ -43,7 +43,23 @@ export function Frame({
     "block py-3 text-[17px] text-hall-foreground/75 hover:text-hall-foreground sm:py-2 sm:text-base";
 
   return (
-    <div className={cn(env === "hall" ? "hall" : "paper", "min-h-screen overflow-x-hidden bg-background text-foreground")}>
+    <div className={cn(env === "hall" ? "hall hall-light" : "paper", "min-h-screen overflow-x-hidden bg-background text-foreground")}>
+      <svg aria-hidden className="absolute h-0 w-0 overflow-hidden">
+        <defs>
+          <filter id="cloth-grain" x="0" y="0" width="100%" height="100%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.7 0.14" numOctaves="2" seed="11" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="0.7" />
+          </filter>
+          <filter id="leather-grain" x="0" y="0" width="100%" height="100%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.12 0.32" numOctaves="3" seed="23" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.15" />
+          </filter>
+          <filter id="wood-grain" x="0" y="0" width="100%" height="100%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.008 0.24" numOctaves="2" seed="7" result="noise" />
+            <feColorMatrix in="noise" type="saturate" values="0" />
+          </filter>
+        </defs>
+      </svg>
       <header className={cn("relative z-40 mx-auto px-5 pt-5 pb-2", narrow ? "max-w-[560px]" : "max-w-5xl")}>
         <div className="flex items-baseline justify-between gap-4">
           <Link to="/" className="text-small-caps min-w-0 truncate text-sm tracking-widest text-muted-foreground hover:text-foreground">
