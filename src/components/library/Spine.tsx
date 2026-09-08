@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { SpineBook } from "@/lib/catalogue.functions";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { houseHash as publisherHash } from "@/lib/binding";
@@ -284,7 +284,7 @@ export function Spine({ book, onLoan = false, setAside = false }: { book: SpineB
      <div
        ref={ref}
        className="book-object relative shrink-0"
-       style={{ "--spine-lean": `${lean}deg` } as React.CSSProperties}
+       style={{ "--spine-lean": `${lean}deg` } as CSSProperties}
        onMouseEnter={openHover}
        onMouseLeave={closeHover}
      >
