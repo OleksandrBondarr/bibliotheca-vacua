@@ -117,12 +117,12 @@ function Binding({ book, style, height }: { book: SpineBook; style: number; heig
 /** Relative luminance of a hex spine colour, so ink can be chosen for contrast. */
 function luminance(hex: string | null) {
   const m = /^#?([0-9a-f]{6})$/i.exec((hex ?? "").trim());
-  if (!m) return 0.2;
+  if (!m || !m[1]) return 0.2;
   const n = parseInt(m[1], 16);
   const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => {
     const s = v / 255;
     return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-  });
+  }) as [number, number, number];
   return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
 }
 
