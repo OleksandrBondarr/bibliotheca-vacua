@@ -235,6 +235,7 @@ export type Database = {
         | "novels"
         | "poetry"
         | "treatises"
+        | "sciences"
         | "memoirs"
         | "reference"
         | "restricted"
@@ -372,6 +373,7 @@ export const Constants = {
         "novels",
         "poetry",
         "treatises",
+        "sciences",
         "memoirs",
         "reference",
         "restricted",

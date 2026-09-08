@@ -6,6 +6,7 @@ export const DEPARTMENTS: { slug: Department; label: string; note: string; lent:
   { slug: "novels", label: "Novels", note: "Rigorous fictions", lent: true },
   { slug: "poetry", label: "Poetry", note: "Collections and hymns", lent: true },
   { slug: "treatises", label: "Treatises", note: "Monographs on impossible subjects", lent: true },
+  { slug: "sciences", label: "Sciences", note: "Monographs, proceedings, tables", lent: true },
   { slug: "memoirs", label: "Memoirs", note: "Lives, some of them lived", lent: true },
   { slug: "reference", label: "Reference", note: "Dictionaries, tables, indices", lent: true },
   { slug: "restricted", label: "Restricted", note: "Not lent", lent: false },
