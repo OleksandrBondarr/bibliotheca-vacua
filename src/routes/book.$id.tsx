@@ -4,10 +4,21 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { z } from "zod";
 import { bookQuery } from "@/lib/catalogue.functions";
+import { getRequestOrigin } from "@/lib/origin.functions";
+import { ShareLine } from "@/components/library/Share";
 import { takeOutBook } from "@/lib/loans.functions";
 import { departmentLabel, LOAN_DAYS } from "@/lib/departments";
 import { useSession } from "@/hooks/useSession";
 import { Frame, Prose, Rule, buttonPrimary, buttonQuiet } from "@/components/library/Frame";
+
+function firstTwoSentences(text: string | null | undefined) {
+  if (!text) return "";
+  const clean = text.trim().replace(/\*/g, "");
+  const found = clean.match(/[^.!?]+[.!?]+["»']?/g);
+  let out = (found ? found.slice(0, 2).join(" ") : clean).trim();
+  if (out.length > 280) out = `${out.slice(0, 279).trimEnd()}…`;
+  return out;
+}
 
 const bookNotFound = () => (
   <Frame env="paper" narrow>
@@ -18,20 +29,39 @@ const bookNotFound = () => (
 export const Route = createFileRoute("/book/$id")({
   loader: async ({ context, params }) => {
     if (!z.string().uuid().safeParse(params.id).success) throw notFound();
-    const book = await context.queryClient.ensureQueryData(bookQuery(params.id));
+    const [book, origin] = await Promise.all([
+      context.queryClient.ensureQueryData(bookQuery(params.id)),
+      getRequestOrigin(),
+    ]);
     if (!book) throw notFound();
-    return book;
+    return { ...book, origin };
   },
-  head: ({ loaderData }) => ({
-    meta: [
-      { title: loaderData ? `${loaderData.title} — ${loaderData.author} · Bibliotheca Vacua` : "Bibliotheca Vacua" },
-      { name: "description", content: loaderData?.review?.slice(0, 155) ?? "A book from the Bibliotheca Vacua." },
-      { property: "og:title", content: loaderData?.title ?? "Bibliotheca Vacua" },
-      { property: "og:description", content: loaderData?.review?.slice(0, 200) ?? "A book that does not exist." },
-      { property: "og:type", content: "book" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
+  head: ({ loaderData, params }) => {
+    const sentences = firstTwoSentences(loaderData?.review);
+    const url = loaderData ? `${loaderData.origin}/book/${params.id}` : undefined;
+    const image = loaderData ? `${loaderData.origin}/api/public/og/book/${params.id}.png` : undefined;
+    const title = loaderData ? `${loaderData.title} — ${loaderData.author}` : "Bibliotheca Vacua";
+    return {
+      meta: [
+        { title: `${title} · Bibliotheca Vacua` },
+        { name: "description", content: sentences || "A book from the Bibliotheca Vacua." },
+        { property: "og:title", content: title },
+        { property: "og:description", content: sentences || "A book that does not exist." },
+        { property: "og:type", content: "book" },
+        ...(url ? [{ property: "og:url", content: url }] : []),
+        ...(image
+          ? [
+              { property: "og:image", content: image },
+              { property: "og:image:width", content: "1200" },
+              { property: "og:image:height", content: "630" },
+              { name: "twitter:image", content: image },
+            ]
+          : []),
+        { name: "twitter:card", content: "summary_large_image" },
+      ],
+      links: url ? [{ rel: "canonical", href: `/book/${params.id}` }] : [],
+    };
+  },
   component: BookPage,
   notFoundComponent: bookNotFound,
   errorComponent: () => (
@@ -44,6 +74,7 @@ export const Route = createFileRoute("/book/$id")({
 function BookPage() {
   const { id } = Route.useParams();
   const { data: book } = useSuspenseQuery(bookQuery(id));
+  const { origin } = Route.useLoaderData();
   const session = useSession();
   const navigate = useNavigate();
   const takeOut = useServerFn(takeOutBook);
@@ -107,6 +138,8 @@ function BookPage() {
       ) : (
         <p className="italic text-muted-foreground">The review has not yet been written.</p>
       )}
+
+      <ShareLine url={`${origin}/book/${book.id}`} title={`${book.title} — ${book.author}`} />
 
       <Rule className="my-10" />
 
