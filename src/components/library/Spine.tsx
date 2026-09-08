@@ -54,6 +54,7 @@ function Slip({ children }: { children: ReactNode }) {
   return (
     <span
       aria-hidden
+      data-spine-decoration
       className="pointer-events-none absolute bottom-[5px] left-1/2 z-[3] -translate-x-1/2 border border-ink/25 bg-paper px-1 text-[11px] leading-[1.35] tabular-nums text-ink"
     >
       {children}
@@ -213,10 +214,10 @@ export function Spine({ book, onLoan = false, setAside = false }: { book: SpineB
       return titleBox.left < box.right && titleBox.right > box.left && titleBox.top < box.bottom && titleBox.bottom > box.top;
     });
     if (intersects) {
-      ref.current.dataset.spineCollision = "true";
+      ref.current.dataset["spineCollision"] = "true";
       console.warn(`[Bibliotheca Vacua] Spine decoration intersects title: ${book.title}`);
     } else {
-      delete ref.current.dataset.spineCollision;
+      delete ref.current.dataset["spineCollision"];
     }
   }, [book.title, height, style]);
 
@@ -253,7 +254,6 @@ export function Spine({ book, onLoan = false, setAside = false }: { book: SpineB
     height,
     width,
     backgroundColor: book.spine_color,
-     "--spine-lean": `${lean}deg`,
   } as const;
 
   const inner = (
@@ -272,7 +272,7 @@ export function Spine({ book, onLoan = false, setAside = false }: { book: SpineB
           {book.title}
         </span>
       </span>
-       <span data-spine-decoration><Slip>{book.shelf_mark}</Slip></span>
+       <Slip>{book.shelf_mark}</Slip>
     </>
   );
 
@@ -281,7 +281,13 @@ export function Spine({ book, onLoan = false, setAside = false }: { book: SpineB
      "physical-spine relative mt-[6px] flex shrink-0 items-start justify-center overflow-hidden rounded-b-[2px] outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
   return (
-    <div ref={ref} className="relative shrink-0" onMouseEnter={openHover} onMouseLeave={closeHover}>
+     <div
+       ref={ref}
+       className="book-object relative shrink-0"
+       style={{ "--spine-lean": `${lean}deg` } as React.CSSProperties}
+       onMouseEnter={openHover}
+       onMouseLeave={closeHover}
+     >
       <PageBlock />
       {onLoan && <Ribbon />}
       {setAside && <SetAsideSlip />}
