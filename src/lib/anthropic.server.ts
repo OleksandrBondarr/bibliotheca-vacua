@@ -135,8 +135,13 @@ export type BookForPrompt = {
   publisher?: { name: string; city: string; style_note: string | null } | null;
 };
 
-export async function generateReview(book: BookForPrompt): Promise<string> {
+export async function generateReview(book: BookForPrompt, depth: "standard" | "deep" = "standard"): Promise<string> {
   const system = `You are a senior critic writing for a serious literary review. You write about books that have long been published and argued over. Your tone is calm, exact, slightly ironic, never gushing. You never hint that a book is invented or fictional; it simply exists. You never mention real people, real critics, real institutions, or real books. No headings, no bullet points, no quotation of the book longer than a phrase. Plain paragraphs separated by blank lines.`;
+
+  const length =
+    depth === "deep"
+      ? "Four paragraphs, 400–480 words total. Go deeper than usual: the philosophical problem the book circles, how its form embodies that problem, the quarrel it has caused among readers, its finest passage and its fault."
+      : "Three or four paragraphs, 280–380 words total. Describe what the book does and how it is built, the argument it has provoked over the years, its best passage and its fault.";
 
   const user = `Write the review for the library's catalogue card.
 
@@ -148,9 +153,48 @@ Publisher: ${book.publisher?.name ?? "unknown"}, ${book.publisher?.city ?? ""} (
 Year: ${book.year}
 Pages: ${book.pages}
 
-Three or four paragraphs, 280–380 words total. Describe what the book does and how it is built, the argument it has provoked over the years, its best passage and its fault. Write as if every reader already knows the book. Output the paragraphs only.`;
+${length} Write as if every reader already knows the book. Output the paragraphs only.`;
 
-  return askClaude(system, user, 1200);
+  return askClaude(system, user, depth === "deep" ? 1600 : 1200);
+}
+
+/* ------------------------------------------------------------------ */
+/* The Lem-neighbourhood shelf                                         */
+/* ------------------------------------------------------------------ */
+
+export type LemEntry = CatalogueEntry & { department: string };
+
+export async function generateLemCatalogue(existingTitles: string[], count = 14): Promise<LemEntry[]> {
+  const system = `You are the chief cataloguer of the Bibliotheca Vacua, an old and serious library. You are assembling a commemorative shelf of books that live in the intellectual neighbourhood of a certain twentieth-century philosophical writer of speculative fiction. You must NOT name him, quote him, or use any of his titles, characters, places, or coinages. Nobody reading the entries should be able to point to a borrowed name. The books develop and reinterpret his themes with their own inventions: contact without understanding; technology as fate; machines that author; phantom worlds and simulated persons; the limits of translation between minds; the comedy of reason facing what it cannot digest. Invented authors and publishers only. Never use real people, real publishers, or real books. Never mention that anything is invented. Return strict JSON only.`;
+
+  const user = `Produce exactly ${count} books as a JSON array, spread across the departments "novels", "poetry", "treatises", "memoirs", "reference" (at least two per department; none in "restricted"). Each element:
+{
+  "title": string (distinctive, unhurried),
+  "author": string (invented; vary nationalities widely: Polish, Estonian, Nigerian, Uruguayan, Korean, Welsh, Persian, Finnish, Lebanese, Peruvian, Czech...),
+  "kind": string (e.g. "Novel", "Treatise", "Monograph", "Poems", "Memoir", "Dictionary", "Gazetteer", "Proceedings"),
+  "department": one of "novels" | "poetry" | "treatises" | "memoirs" | "reference",
+  "publisher_name": string (invented small press; reuse a name for 2–3 books),
+  "publisher_city": string,
+  "publisher_note": string (one sentence on the house's character and typography),
+  "year": integer between 1958 and 2071,
+  "pages": integer between 64 and 420,
+  "spine_color": hex colour, muted and bookish (deep reds, bottle greens, slate blues, ochres, aubergines, near-blacks)
+}
+Avoid these existing titles: ${existingTitles.slice(0, 60).join("; ") || "none"}.
+Output the JSON array and nothing else.`;
+
+  const text = await askClaude(system, user, 6000);
+  const entries = extractJson<LemEntry[]>(text);
+  return entries
+    .filter((e) => e && e.title && e.author)
+    .map((e) => ({
+      ...e,
+      department: ["novels", "poetry", "treatises", "memoirs", "reference"].includes(e.department) ? e.department : "novels",
+      year: clamp(Math.round(Number(e.year) || 1990), 1958, 2071),
+      pages: clamp(Math.round(Number(e.pages) || 200), 64, 420),
+      spine_color: /^#[0-9a-f]{6}$/i.test(e.spine_color ?? "") ? e.spine_color : "#5a4a3a",
+      kind: e.kind || "Book",
+    }));
 }
 
 /* ------------------------------------------------------------------ */

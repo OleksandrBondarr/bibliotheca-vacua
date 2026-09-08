@@ -11,25 +11,38 @@ export type SpineBook = {
   spine_color: string;
   status: "available" | "taken_forever";
   department: string;
+  featured: boolean;
 };
 
 export type BookDetail = SpineBook & {
   kind: string;
   year: number;
   review: string | null;
+  kept_by_name: string | null;
+  kept_at: string | null;
   publisher: { name: string; city: string; style_note: string | null } | null;
 };
 
-const SPINE_COLUMNS = "id, title, author, pages, spine_color, status, department";
+export type TakenBook = {
+  id: string;
+  title: string;
+  author: string;
+  department: string;
+  kept_by_name: string | null;
+  kept_at: string | null;
+};
+
+const SPINE_COLUMNS = "id, title, author, pages, spine_color, status, department, featured";
 
 export const getHall = createServerFn({ method: "GET" }).handler(async () => {
   const { createPublicClient } = await import("./public-client.server");
   const db = createPublicClient();
 
-  const [total, taken, arrivals] = await Promise.all([
+  const [total, taken, arrivals, featured] = await Promise.all([
     db.from("books").select("id", { count: "exact", head: true }),
     db.from("books").select("id", { count: "exact", head: true }).eq("status", "taken_forever"),
     db.from("books").select(SPINE_COLUMNS).order("created_at", { ascending: false }).limit(18),
+    db.from("books").select(SPINE_COLUMNS).eq("featured", true).order("created_at", { ascending: true }),
   ]);
   if (arrivals.error) throw new Error(arrivals.error.message);
 
@@ -37,6 +50,7 @@ export const getHall = createServerFn({ method: "GET" }).handler(async () => {
     total: total.count ?? 0,
     takenForever: taken.count ?? 0,
     arrivals: (arrivals.data ?? []) as SpineBook[],
+    featured: (featured.data ?? []) as SpineBook[],
   };
 });
 
@@ -63,13 +77,25 @@ export const getBook = createServerFn({ method: "GET" })
     const { data: book, error } = await db
       .from("books")
       .select(
-        `${SPINE_COLUMNS}, kind, year, review, publisher:publishers(name, city, style_note)`,
+        `${SPINE_COLUMNS}, kind, year, review, kept_by_name, kept_at, publisher:publishers(name, city, style_note)`,
       )
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw new Error(error.message);
     return (book as BookDetail | null) ?? null;
   });
+
+export const listTaken = createServerFn({ method: "GET" }).handler(async () => {
+  const { createPublicClient } = await import("./public-client.server");
+  const db = createPublicClient();
+  const { data, error } = await db
+    .from("books")
+    .select("id, title, author, department, kept_by_name, kept_at")
+    .eq("status", "taken_forever")
+    .order("kept_at", { ascending: true, nullsFirst: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as TakenBook[];
+});
 
 /* Query options shared by loaders and components */
 export const hallQuery = queryOptions({
@@ -88,3 +114,8 @@ export const bookQuery = (id: string) =>
     queryKey: ["book", id],
     queryFn: () => getBook({ data: { id } }),
   });
+
+export const takenQuery = queryOptions({
+  queryKey: ["taken"],
+  queryFn: () => listTaken(),
+});

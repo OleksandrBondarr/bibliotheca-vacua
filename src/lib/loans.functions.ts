@@ -28,9 +28,6 @@ async function expireStaleLoans(supabase: SupabaseClient<Database>, userId: stri
     .lt("ends_at", new Date().toISOString());
 }
 
-async function getCtx() {
-  return null as unknown as { supabase: import("@supabase/supabase-js").SupabaseClient<import("@/integrations/supabase/types").Database> };
-}
 
 /* ------------------------------------------------------------------ */
 
@@ -197,6 +194,23 @@ export const returnBook = createServerFn({ method: "POST" })
       .update({ status: "returned", pages: [] })
       .eq("id", data.loanId)
       .eq("status", "active");
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** Leaves an address to be written to when keeping books opens. */
+export const requestKeep = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ loanId: z.string().uuid(), email: z.string().email().max(200) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: loan } = await supabase.from("loans").select("id").eq("id", data.loanId).maybeSingle();
+    if (!loan) throw new Error("This loan is not on your card.");
+    const { error } = await supabase
+      .from("keep_requests")
+      .insert({ user_id: userId, loan_id: data.loanId, email: data.email.trim().toLowerCase() });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
