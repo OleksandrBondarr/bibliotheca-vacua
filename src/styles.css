@@ -156,6 +156,8 @@
 
 /* Wooden plank under a shelf, with a faint grain */
 @utility plank {
+  position: relative;
+  border-top: 1px solid color-mix(in oklch, var(--color-wood-light), var(--color-brass) 18%);
   background:
     repeating-linear-gradient(
       to right,
@@ -165,7 +167,20 @@
       transparent 7px 17px
     ),
     linear-gradient(to bottom, var(--color-wood-light), var(--color-wood) 40%, var(--color-wood-dark));
-  box-shadow: 0 6px 12px oklch(0 0 0 / 45%);
+  box-shadow:
+    inset 0 3px 0 color-mix(in oklch, var(--color-wood-light), white 10%),
+    inset 0 -3px 0 var(--color-wood-dark),
+    0 7px 13px oklch(0 0 0 / 45%);
+}
+
+@utility shelf-bed {
+  box-shadow: inset 0 -9px 8px -8px oklch(0 0 0 / 75%);
+}
+
+@utility reading-text {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 /* Card-catalogue drawer */

@@ -115,14 +115,17 @@ export const getLoan = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await expireStaleLoans(supabase, userId);
-    const { data: loan, error } = await supabase
-      .from("loans")
-      .select(`id, ends_at, status, pages, current_page, bookmark_page, ${BOOK_JOIN}`)
-      .eq("id", data.loanId)
-      .maybeSingle();
+    const [{ data: loan, error }, { data: profile }] = await Promise.all([
+      supabase
+        .from("loans")
+        .select(`id, ends_at, status, pages, current_page, bookmark_page, ${BOOK_JOIN}`)
+        .eq("id", data.loanId)
+        .maybeSingle(),
+      supabase.from("profiles").select("display_name").eq("user_id", userId).maybeSingle(),
+    ]);
     if (error) throw new Error(error.message);
     if (!loan) throw new Error("This loan is not on your card.");
-    return shapeLoan(loan);
+    return shapeLoan(loan, profile?.display_name ?? "Reader");
   });
 
 /**
@@ -137,11 +140,14 @@ export const turnToPage = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await expireStaleLoans(supabase, userId);
-    const { data: loan, error } = await supabase
-      .from("loans")
-      .select(`id, ends_at, status, pages, current_page, bookmark_page, ${BOOK_JOIN}`)
-      .eq("id", data.loanId)
-      .maybeSingle();
+    const [{ data: loan, error }, { data: profile }] = await Promise.all([
+      supabase
+        .from("loans")
+        .select(`id, ends_at, status, pages, current_page, bookmark_page, ${BOOK_JOIN}`)
+        .eq("id", data.loanId)
+        .maybeSingle(),
+      supabase.from("profiles").select("display_name").eq("user_id", userId).maybeSingle(),
+    ]);
     if (error) throw new Error(error.message);
     if (!loan) throw new Error("This loan is not on your card.");
     if (loan.status !== "active") throw new Error("This loan has ended; the book has vanished.");
@@ -176,7 +182,7 @@ export const turnToPage = createServerFn({ method: "POST" })
       .select(`id, ends_at, status, pages, current_page, bookmark_page, ${BOOK_JOIN}`)
       .single();
     if (upErr) throw new Error(upErr.message);
-    return shapeLoan(updated);
+    return shapeLoan(updated, profile?.display_name ?? "Reader");
   });
 
 export const setBookmark = createServerFn({ method: "POST" })
@@ -251,7 +257,7 @@ function shapeLoan(loan: {
   current_page: number;
   bookmark_page: number | null;
   book: unknown;
-}) {
+}, readerName = "Reader") {
   const pages = (loan.pages as string[]) ?? [];
   const book = loan.book as LoanBook;
   const current = Math.min(Math.max(loan.current_page, 1), Math.max(pages.length, 1));
@@ -263,6 +269,7 @@ function shapeLoan(loan: {
     writtenPages: pages.length,
     bookmarkPage: loan.bookmark_page,
     text: pages[current - 1] ?? null,
+    readerName,
     book: {
       id: book.id,
       title: book.title,
