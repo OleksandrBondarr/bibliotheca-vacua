@@ -6,8 +6,11 @@ import { cn } from "@/lib/utils";
 
 function firstSentences(text: string | null, count = 2) {
   if (!text) return null;
-  const parts = text.trim().split(/(?<=[.!?»"])\s+/);
-  return parts.slice(0, count).join(" ");
+  const clean = text.trim().replace(/\*/g, "");
+  const found = clean.match(/[^.!?]+[.!?]+["»']?/g);
+  let out = (found ? found.slice(0, count).join(" ") : clean).trim();
+  if (out.length > 320) out = `${out.slice(0, 300).trimEnd()}…`;
+  return out;
 }
 
 function imprint(book: SpineBook) {
@@ -16,7 +19,7 @@ function imprint(book: SpineBook) {
 }
 
 /** The paper catalogue card shown on hover (desktop) or in the bottom sheet (phone). */
-function CatalogueCard({ book, onOpen }: { book: SpineBook; onOpen?: () => void }) {
+function CatalogueCard({ book, hideCue }: { book: SpineBook; hideCue?: boolean }) {
   const snippet = firstSentences(book.review);
   return (
     <div className="bg-paper p-4 text-ink">
@@ -32,20 +35,11 @@ function CatalogueCard({ book, onOpen }: { book: SpineBook; onOpen?: () => void 
       {book.status === "taken_forever" && (
         <p className="mt-3 text-small-caps text-[15px] text-stamp">Taken forever</p>
       )}
-      {onOpen ? (
-        <button
-          type="button"
-          onClick={onOpen}
-          className="mt-4 w-full border border-ink px-4 py-3 text-[15px] text-ink"
-        >
-          Open
-        </button>
-      ) : (
-        <p className="mt-3 text-[15px] text-ink-soft">Open the card →</p>
-      )}
+      {!hideCue && <p className="mt-3 text-[15px] text-ink-soft">Open the card →</p>}
     </div>
   );
 }
+
 
 export function Spine({ book }: { book: SpineBook }) {
   const isMobile = useIsMobile();
