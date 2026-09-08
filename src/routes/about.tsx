@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { getRequestOrigin } from "@/lib/origin.functions";
+import { ogImage } from "@/lib/og-meta";
 import { Frame, Rule } from "@/components/library/Frame";
 
 export const Route = createFileRoute("/about")({
-  head: () => ({
+  loader: async () => ({ origin: await getRequestOrigin() }),
+  head: ({ loaderData }) => ({
     meta: [
       { title: "About the library — Bibliotheca Vacua" },
       {
@@ -16,7 +19,8 @@ export const Route = createFileRoute("/about")({
         content: "A library where nothing exists until someone reads it, and what has been read cannot be read again.",
       },
       { property: "og:type", content: "article" },
-      { name: "twitter:card", content: "summary" },
+      ...ogImage(loaderData?.origin, "about", "/about"),
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [{ rel: "canonical", href: "/about" }],
   }),

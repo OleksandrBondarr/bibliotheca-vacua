@@ -31,7 +31,7 @@ export function Shelf({
       <div className={cn(vitrine && "vitrine rounded-sm pt-1")}>
         <div
           className={cn(
-            "flex items-end gap-[3px] overflow-x-auto px-4 pt-3 [scrollbar-width:thin]",
+            "shelf-scroll flex items-end gap-[3px] px-4 pt-3",
             books.length > 0 && "min-h-[208px]",
           )}
         >

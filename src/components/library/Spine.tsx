@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import type { SpineBook } from "@/lib/catalogue.functions";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { houseHash as publisherHash } from "@/lib/binding";
 import { cn } from "@/lib/utils";
 
 function firstSentences(text: string | null, count = 2) {
@@ -43,10 +44,7 @@ function CatalogueCard({ book, hideCue }: { book: SpineBook; hideCue?: boolean }
 
 /** Deterministic binding style per publishing house. */
 function houseHash(book: SpineBook) {
-  const key = book.publisher?.name ?? "without an imprint";
-  let h = 0;
-  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) % 100000;
-  return h;
+  return publisherHash(book.publisher?.name ?? null);
 }
 
 /** Binding decoration drawn over the spine colour. */

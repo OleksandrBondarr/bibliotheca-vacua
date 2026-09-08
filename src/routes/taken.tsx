@@ -2,18 +2,27 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { takenQuery } from "@/lib/catalogue.functions";
 import { departmentLabel } from "@/lib/departments";
+import { getRequestOrigin } from "@/lib/origin.functions";
+import { ogImage } from "@/lib/og-meta";
 import { Frame, Rule } from "@/components/library/Frame";
 
 export const Route = createFileRoute("/taken")({
-  loader: ({ context }) => context.queryClient.ensureQueryData(takenQuery),
-  head: () => ({
+  loader: async ({ context }) => {
+    const [, origin] = await Promise.all([
+      context.queryClient.ensureQueryData(takenQuery),
+      getRequestOrigin(),
+    ]);
+    return { origin };
+  },
+  head: ({ loaderData }) => ({
     meta: [
       { title: "Taken forever — Bibliotheca Vacua" },
       { name: "description", content: "The register of books that have left the library for good, with the reader who kept each and the date." },
       { property: "og:title", content: "Taken forever — Bibliotheca Vacua" },
       { property: "og:description", content: "The register of books kept for good." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
+      ...ogImage(loaderData?.origin, "taken", "/taken"),
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: TakenPage,
