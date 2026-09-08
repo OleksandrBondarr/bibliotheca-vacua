@@ -18,12 +18,14 @@ export type SpineBook = {
   kind: string;
   year: number;
   review: string | null;
+  shelf_mark: string;
   publisher: PublisherRef;
 };
 
 export type BookDetail = SpineBook & {
   kept_by_name: string | null;
   kept_at: string | null;
+  shelf_mark: string;
 };
 
 export type TakenBook = {
@@ -36,7 +38,7 @@ export type TakenBook = {
 };
 
 const SPINE_COLUMNS =
-  "id, title, author, pages, spine_color, status, department, shelf, featured, kind, year, review, publisher:publishers(name, city, style_note)";
+  "id, title, author, pages, spine_color, status, department, shelf, featured, kind, year, review, shelf_mark, publisher:publishers(name, city, style_note)";
 
 
 export const getHall = createServerFn({ method: "GET" }).handler(async () => {
@@ -130,7 +132,7 @@ export const listTaken = createServerFn({ method: "GET" }).handler(async () => {
   const db = createPublicClient();
   const { data, error } = await db
     .from("books")
-    .select("id, title, author, department, kept_by_name, kept_at")
+    .select("id, title, author, department, kept_by_name, kept_at, shelf_mark")
     .eq("status", "taken_forever")
     .order("kept_at", { ascending: true, nullsFirst: false });
   if (error) throw new Error(error.message);

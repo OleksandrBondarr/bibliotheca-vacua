@@ -16,7 +16,9 @@ function firstSentences(text: string | null, count = 2) {
 
 function imprint(book: SpineBook) {
   const pub = book.publisher ? `${book.publisher.name}, ${book.publisher.city}` : null;
-  return [book.kind, pub, String(book.year), `${book.pages} pages`].filter(Boolean).join(" · ");
+  return [book.kind, pub, String(book.year), `${book.pages} pages`, `Shelf mark ${book.shelf_mark}`]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 /** The paper catalogue card shown on hover (desktop) or in the bottom sheet (phone). */
@@ -52,7 +54,7 @@ function Slip({ children }: { children: ReactNode }) {
   return (
     <span
       aria-hidden
-      className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 border border-[oklch(0_0_0/25%)] bg-paper px-1 text-[9px] leading-[1.4] tabular-nums text-ink"
+      className="pointer-events-none absolute bottom-[5px] left-1/2 z-[3] -translate-x-1/2 border border-ink/25 bg-paper px-1 text-[11px] leading-[1.35] tabular-nums text-ink"
     >
       {children}
     </span>
@@ -60,39 +62,28 @@ function Slip({ children }: { children: ReactNode }) {
 }
 
 /** Binding decoration drawn over the spine colour. */
-function Binding({ book, style, height }: { book: SpineBook; style: number; height: number }) {
+function Binding({ style }: { style: number }) {
   const gilt = "oklch(0.82 0.09 82 / 70%)";
   const dark = "oklch(0 0 0 / 30%)";
   const light = "oklch(1 0 0 / 14%)";
-  // Books on the "sciences not yet made" shelf carry their year on the slip.
-  const yearSlip = book.shelf === "not_yet" ? <Slip>{book.year}</Slip> : null;
-
   if (style === 0)
     return (
       <span aria-hidden className="pointer-events-none absolute inset-0">
         <span className="absolute inset-x-[3px] top-[10px] h-px" style={{ background: gilt }} />
         <span className="absolute inset-x-[3px] top-[14px] h-px" style={{ background: gilt }} />
-        {yearSlip ?? (
-          <>
-            <span className="absolute inset-x-[3px] bottom-[10px] h-px" style={{ background: gilt }} />
-            <span className="absolute inset-x-[3px] bottom-[14px] h-px" style={{ background: gilt }} />
-          </>
-        )}
+        <span className="absolute inset-x-[3px] bottom-[25px] h-px" style={{ background: gilt }} />
+        <span className="absolute inset-x-[3px] bottom-[28px] h-px" style={{ background: gilt }} />
       </span>
     );
 
-  if (style === 1)
-    return <Slip>{yearSlip ? book.year : String(200 + ((houseHash(book) + book.pages) % 8800))}</Slip>;
+  if (style === 1) return null;
 
 
   if (style === 2)
     return (
       <span aria-hidden className="pointer-events-none absolute inset-0">
-        <span
-          className="absolute inset-x-0"
-          style={{ top: Math.round(height * 0.16), height: Math.round(height * 0.3), background: dark }}
-        />
-        {yearSlip}
+        <span className="absolute inset-x-[4px] top-[12px] h-px" style={{ background: dark }} />
+        <span className="absolute inset-x-[4px] top-[16px] h-px" style={{ background: dark }} />
       </span>
     );
 
@@ -101,12 +92,6 @@ function Binding({ book, style, height }: { book: SpineBook; style: number; heig
       <span aria-hidden className="pointer-events-none absolute inset-0">
         <span className="absolute inset-x-[4px] top-[9px] h-px" style={{ background: light }} />
         <span className="absolute inset-x-[4px] top-[12px] h-px" style={{ background: light }} />
-        {yearSlip ?? (
-          <span
-            className="absolute bottom-3 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 border"
-            style={{ borderColor: gilt }}
-          />
-        )}
       </span>
     );
 
@@ -115,7 +100,6 @@ function Binding({ book, style, height }: { book: SpineBook; style: number; heig
       <span aria-hidden className="pointer-events-none absolute inset-0">
         <span className="absolute inset-x-0 top-0 h-[9px]" style={{ background: light }} />
         <span className="absolute inset-x-0 bottom-0 h-[9px]" style={{ background: light }} />
-        {yearSlip}
       </span>
     );
 
@@ -128,7 +112,6 @@ function Binding({ book, style, height }: { book: SpineBook; style: number; heig
             "repeating-linear-gradient(to right, oklch(1 0 0 / 4%) 0 1px, transparent 1px 4px, oklch(0 0 0 / 6%) 4px 5px, transparent 5px 9px)",
         }}
       />
-      {yearSlip}
     </span>
   );
 }
@@ -136,23 +119,21 @@ function Binding({ book, style, height }: { book: SpineBook; style: number; heig
 /** A publisher's blind-stamped geometric mark, repeated across its bindings. */
 function PublisherMark({ book }: { book: SpineBook }) {
   const hash = houseHash(book);
-  const letter = (book.publisher?.name.trim().match(/[A-Za-z]/)?.[0] ?? "V").toUpperCase();
-  const shape = hash % 4;
+  const shape = hash % 6;
   const markColor = `color-mix(in oklch, ${book.spine_color}, var(--ink) 42%)`;
 
   return (
     <span
       aria-hidden
-      className={cn(
-        "pointer-events-none absolute bottom-[34px] left-1/2 z-[2] flex h-[15px] w-[15px] -translate-x-1/2 items-center justify-center text-[8px] font-semibold leading-none opacity-80",
-        shape === 0 && "border",
-        shape === 1 && "rotate-45 border",
-        shape === 2 && "rounded-full border",
-        shape === 3 && "border-x border-y-2",
-      )}
-      style={{ color: markColor, borderColor: markColor }}
+      className="pointer-events-none absolute bottom-[25px] left-1/2 z-[2] h-2 w-2 -translate-x-1/2 opacity-70"
+      style={{ color: markColor }}
     >
-      <span className={cn(shape === 1 && "-rotate-45")}>{letter}</span>
+      {shape === 0 && <span className="absolute left-0 top-[3px] h-px w-2 bg-current" />}
+      {shape === 1 && <span className="absolute left-px top-px h-1.5 w-1.5 rotate-45 border border-current" />}
+      {shape === 2 && <span className="absolute inset-px rounded-full border border-current" />}
+      {shape === 3 && <><span className="absolute left-0 top-[3px] h-px w-2 bg-current" /><span className="absolute left-[3px] top-0 h-2 w-px bg-current" /></>}
+      {shape === 4 && <><span className="absolute left-0 top-1 h-px w-[5px] -rotate-45 bg-current" /><span className="absolute right-0 top-1 h-px w-[5px] rotate-45 bg-current" /></>}
+      {shape === 5 && <><span className="absolute left-0 top-[3px] h-px w-2 bg-current" /><span className="absolute left-[3px] top-0 h-2 w-px bg-current" /><span className="absolute left-px top-px h-1.5 w-1.5 rotate-45 border border-current" /></>}
     </span>
   );
 }
@@ -201,39 +182,16 @@ function luminance(hex: string | null) {
   return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
 }
 
-/** Vertical space each binding style occupies at head and foot of the spine. */
-function reserve(style: number, height: number, slip: boolean) {
-  const z = (() => {
-    switch (style) {
-      case 0:
-        return { top: 22, bottom: 22 };
-      case 1:
-        return { top: 14, bottom: 32 };
-      case 2:
-        return { top: Math.round(height * 0.16 + height * 0.3) + 8, bottom: 12 };
-      case 3:
-        return { top: 20, bottom: 28 };
-      case 4:
-        return { top: 18, bottom: 18 };
-      default:
-        return { top: 14, bottom: 14 };
-    }
-  })();
-  return slip ? { top: z.top, bottom: Math.max(z.bottom, 32) } : z;
-}
-
-
 export function Spine({ book, onLoan = false, setAside = false }: { book: SpineBook; onLoan?: boolean; setAside?: boolean }) {
   const isMobile = useIsMobile();
-  const height = 132 + Math.round((book.pages / 420) * 76);
+  const height = Math.max(184, 132 + Math.round((book.pages / 420) * 76));
   const width = 40 + Math.min(12, Math.round((book.pages / 420) * 12));
   const taken = book.status === "taken_forever";
   const style = houseHash(book) % 6;
   const pale = luminance(book.spine_color) > 0.45;
   const ink = pale ? "oklch(0.24 0.02 60)" : "oklch(0.93 0.015 85)";
-  const reserved = reserve(style, height, book.shelf === "not_yet");
-  const zone = { top: reserved.top, bottom: Math.max(reserved.bottom, 54) };
-  const bottom = zone.bottom + (taken ? 18 : 0);
+  const titleTop = 12;
+  const titleBottom = 34;
   const ref = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hover, setHover] = useState<{ left: number; top: number } | null>(null);
@@ -277,19 +235,19 @@ export function Spine({ book, onLoan = false, setAside = false }: { book: SpineB
 
   const inner = (
     <>
-      <Binding book={book} style={style} height={height} />
+      <Binding style={style} />
       <span
-        className="pointer-events-none absolute inset-x-0 z-[1] flex justify-center"
-        style={{ top: zone.top, bottom }}
+        className="pointer-events-none absolute inset-x-0 z-[1] flex justify-center overflow-hidden px-1"
+        style={{ top: titleTop, bottom: titleBottom }}
       >
         <span
-          className="vertical-text block h-full truncate text-[12px] leading-none sm:text-[13px]"
+          className="vertical-text block h-full max-h-full overflow-hidden text-ellipsis whitespace-nowrap text-[12px] leading-none sm:text-[13px]"
           style={{ color: ink }}
         >
           {book.title}
-          <span className="opacity-70">&nbsp;·&nbsp;{book.author}</span>
         </span>
       </span>
+      <Slip>{book.shelf_mark}</Slip>
     </>
   );
 
@@ -318,12 +276,6 @@ export function Spine({ book, onLoan = false, setAside = false }: { book: SpineB
           {inner}
           <PublisherMark book={book} />
         </Link>
-      )}
-
-      {taken && (
-        <span className="pointer-events-none absolute bottom-2 left-1/2 z-10 -translate-x-1/2 rotate-[-6deg] bg-paper px-1 text-[8px] uppercase tracking-wider text-ink">
-          taken
-        </span>
       )}
 
       {hover && !isMobile && (

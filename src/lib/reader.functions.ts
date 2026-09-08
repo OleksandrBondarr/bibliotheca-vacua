@@ -20,7 +20,7 @@ export type SignalKind = (typeof SIGNAL_KINDS)[number];
 export const SIGNALS_BEFORE_SHELF = 6;
 
 const HELD_COLUMNS =
-  "id, title, author, pages, spine_color, status, department, shelf, featured, kind, year, review, publisher:publishers(name, city, style_note)";
+  "id, title, author, pages, spine_color, status, department, shelf, featured, kind, year, review, shelf_mark, publisher:publishers(name, city, style_note)";
 
 /** Records one trace. Silently ignored for anonymous visitors (no bearer, no call). */
 export const recordSignal = createServerFn({ method: "POST" })
