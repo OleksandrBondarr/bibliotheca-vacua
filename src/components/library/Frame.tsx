@@ -126,7 +126,23 @@ export function Frame({
           </>
         ) : null}
       </header>
-      <main className={cn("mx-auto px-5 pb-20", narrow ? "max-w-[560px]" : "max-w-5xl", className)}>{children}</main>
+      <main className={cn("mx-auto px-5 pb-10", narrow ? "max-w-[560px]" : "max-w-5xl", className)}>{children}</main>
+      <footer className={cn("mx-auto px-5 pb-12 pt-4", narrow ? "max-w-[560px]" : "max-w-5xl")}>
+        <div className="rule-thin mb-3 opacity-60" />
+        <p className="text-sm text-muted-foreground">
+          <Link to="/about" className="hover:text-foreground">
+            About the library
+          </Link>
+          {" · "}
+          <Link to="/taken" className="hover:text-foreground">
+            Taken forever
+          </Link>
+          {" · "}
+          <Link to={session ? "/card" : "/auth"} className="hover:text-foreground">
+            Reader's card
+          </Link>
+        </p>
+      </footer>
     </div>
   );
 }
