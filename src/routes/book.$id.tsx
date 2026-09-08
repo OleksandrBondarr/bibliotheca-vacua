@@ -130,7 +130,7 @@ function BookPage() {
           </button>
           {gift && <p className="text-center text-sm italic text-muted-foreground">Gifts will be possible soon.</p>}
           {error && <p className="text-center text-sm text-destructive">{error}</p>}
-          <p className="pt-3 text-center text-[13px] leading-relaxed text-muted-foreground">
+          <p className="pt-3 text-center text-[15px] leading-relaxed text-muted-foreground">
             The book will be written the moment it is issued and will exist only for you. In {LOAN_DAYS} days it returns to the shelf and vanishes — unless you choose to keep it.
           </p>
         </div>
