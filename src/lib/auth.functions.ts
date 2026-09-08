@@ -1,4 +1,5 @@
-import { createServerFn, getRequestHeader } from "@tanstack/react-start";
+import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 const EMAIL_LIMIT = 5; // per email per hour
@@ -27,11 +28,9 @@ async function verifyTurnstile(token: string | null, ip: string | null) {
 }
 
 function callerIp() {
-  const forwarded = getRequestHeader("x-forwarded-for");
-  return (
-    getRequestHeader("cf-connecting-ip") ??
-    (forwarded ? forwarded.split(",")[0]?.trim() ?? null : null)
-  );
+  const headers = getRequest().headers;
+  const forwarded = headers.get("x-forwarded-for");
+  return headers.get("cf-connecting-ip") ?? (forwarded ? forwarded.split(",")[0]?.trim() ?? null : null);
 }
 
 /**
