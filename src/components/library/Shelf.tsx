@@ -56,7 +56,7 @@ export function Shelf({
     (card?.loans ?? []).filter((loan) => loan.status === "active").map((loan) => loan.book.id),
   );
   return (
-    <div>
+    <div className="shelf-case">
       {plaque}
       <div
         className={cn(
@@ -68,7 +68,7 @@ export function Shelf({
         <div
           ref={scroller}
           className={cn(
-            "shelf-scroll shelf-bed flex items-end gap-[3px] px-4 pt-3",
+            "shelf-scroll shelf-bed flex items-end gap-[3px] px-4 pt-3 [perspective:700px]",
             books.length > 0 && "min-h-[208px]",
           )}
         >

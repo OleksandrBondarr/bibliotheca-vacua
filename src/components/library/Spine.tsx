@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { SpineBook } from "@/lib/catalogue.functions";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { houseHash as publisherHash } from "@/lib/binding";
@@ -54,6 +54,7 @@ function Slip({ children }: { children: ReactNode }) {
   return (
     <span
       aria-hidden
+      data-spine-decoration
       className="pointer-events-none absolute bottom-[5px] left-1/2 z-[3] -translate-x-1/2 border border-ink/25 bg-paper px-1 text-[11px] leading-[1.35] tabular-nums text-ink"
     >
       {children}
@@ -69,10 +70,10 @@ function Binding({ style }: { style: number }) {
   if (style === 0)
     return (
       <span aria-hidden className="pointer-events-none absolute inset-0">
-        <span className="absolute inset-x-[3px] top-[10px] h-px" style={{ background: gilt }} />
-        <span className="absolute inset-x-[3px] top-[14px] h-px" style={{ background: gilt }} />
-        <span className="absolute inset-x-[3px] bottom-[25px] h-px" style={{ background: gilt }} />
-        <span className="absolute inset-x-[3px] bottom-[28px] h-px" style={{ background: gilt }} />
+        <span data-spine-decoration className="spine-gilt absolute inset-x-[3px] top-[8px] h-px" style={{ background: gilt }} />
+        <span data-spine-decoration className="spine-gilt absolute inset-x-[3px] top-[11px] h-px" style={{ background: gilt }} />
+        <span data-spine-decoration className="spine-gilt absolute inset-x-[3px] bottom-[26px] h-px" style={{ background: gilt }} />
+        <span data-spine-decoration className="spine-gilt absolute inset-x-[3px] bottom-[29px] h-px" style={{ background: gilt }} />
       </span>
     );
 
@@ -82,24 +83,24 @@ function Binding({ style }: { style: number }) {
   if (style === 2)
     return (
       <span aria-hidden className="pointer-events-none absolute inset-0">
-        <span className="absolute inset-x-[4px] top-[12px] h-px" style={{ background: dark }} />
-        <span className="absolute inset-x-[4px] top-[16px] h-px" style={{ background: dark }} />
+        <span data-spine-decoration className="spine-blind absolute inset-x-[4px] top-[7px] h-px" style={{ background: dark }} />
+        <span data-spine-decoration className="spine-blind absolute inset-x-[4px] top-[10px] h-px" style={{ background: dark }} />
       </span>
     );
 
   if (style === 3)
     return (
       <span aria-hidden className="pointer-events-none absolute inset-0">
-        <span className="absolute inset-x-[4px] top-[9px] h-px" style={{ background: light }} />
-        <span className="absolute inset-x-[4px] top-[12px] h-px" style={{ background: light }} />
+        <span data-spine-decoration className="absolute inset-x-[4px] top-[7px] h-px" style={{ background: light }} />
+        <span data-spine-decoration className="absolute inset-x-[4px] top-[10px] h-px" style={{ background: light }} />
       </span>
     );
 
   if (style === 4)
     return (
       <span aria-hidden className="pointer-events-none absolute inset-0">
-        <span className="absolute inset-x-0 top-0 h-[9px]" style={{ background: light }} />
-        <span className="absolute inset-x-0 bottom-0 h-[9px]" style={{ background: light }} />
+        <span data-spine-decoration className="absolute inset-x-0 top-0 h-[9px]" style={{ background: light }} />
+        <span data-spine-decoration className="absolute inset-x-0 bottom-0 h-[9px]" style={{ background: light }} />
       </span>
     );
 
@@ -125,7 +126,8 @@ function PublisherMark({ book }: { book: SpineBook }) {
   return (
     <span
       aria-hidden
-      className="pointer-events-none absolute bottom-[25px] left-1/2 z-[2] h-2 w-2 -translate-x-1/2 opacity-70"
+      data-spine-decoration
+      className="spine-blind pointer-events-none absolute bottom-[25px] left-1/2 z-[2] h-2 w-2 -translate-x-1/2 opacity-70"
       style={{ color: markColor }}
     >
       {shape === 0 && <span className="absolute left-0 top-[3px] h-px w-2 bg-current" />}
@@ -142,7 +144,7 @@ function PageBlock() {
   return (
     <span
       aria-hidden
-      className="pointer-events-none absolute inset-x-[2px] top-0 z-[3] h-[6px] border-b border-ink/20 bg-paper"
+       className="page-block pointer-events-none absolute inset-x-[2px] top-0 z-[3] h-[6px] border-b border-ink/20 bg-paper"
       style={{
         backgroundImage:
           "repeating-linear-gradient(to bottom, transparent 0 1px, color-mix(in oklch, var(--paper), var(--ink) 14%) 1px 2px), linear-gradient(to right, var(--paper-dark), var(--paper) 72%)",
@@ -184,7 +186,9 @@ function luminance(hex: string | null) {
 
 export function Spine({ book, onLoan = false, setAside = false }: { book: SpineBook; onLoan?: boolean; setAside?: boolean }) {
   const isMobile = useIsMobile();
-  const height = Math.max(184, 132 + Math.round((book.pages / 420) * 76));
+  const objectHash = [...book.id].reduce((sum, char) => (sum * 33 + char.charCodeAt(0)) % 10007, 17);
+  const heightJitter = (objectHash % 7) - 3;
+  const height = Math.max(184, 132 + Math.round((book.pages / 420) * 76) + heightJitter);
   const width = 40 + Math.min(12, Math.round((book.pages / 420) * 12));
   const taken = book.status === "taken_forever";
   const style = houseHash(book) % 6;
@@ -198,6 +202,26 @@ export function Spine({ book, onLoan = false, setAside = false }: { book: SpineB
   const [sheet, setSheet] = useState(false);
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV || !ref.current) return;
+    const title = ref.current.querySelector<HTMLElement>("[data-spine-title]");
+    const decorations = ref.current.querySelectorAll<HTMLElement>("[data-spine-decoration]");
+    if (!title) return;
+    const titleTopEdge = title.offsetTop;
+    const titleBottomEdge = title.offsetTop + title.offsetHeight;
+    const intersects = [...decorations].some((decoration) => {
+      const decorationTop = decoration.offsetTop;
+      const decorationBottom = decoration.offsetTop + decoration.offsetHeight;
+      return titleTopEdge < decorationBottom && titleBottomEdge > decorationTop;
+    });
+    if (intersects) {
+      ref.current.dataset["spineCollision"] = "true";
+      console.warn(`[Bibliotheca Vacua] Spine decoration intersects title: ${book.title}`);
+    } else {
+      delete ref.current.dataset["spineCollision"];
+    }
+  }, [book.title, height, style]);
 
   useEffect(() => {
     if (!sheet) return;
@@ -225,38 +249,47 @@ export function Spine({ book, onLoan = false, setAside = false }: { book: SpineB
   }
 
   const label = `${book.title}, ${book.author}${taken ? " (taken forever)" : ""}`;
-  const spineStyle = {
+   const lean = objectHash % 5 === 0 ? (objectHash % 2 === 0 ? 2 : -2) : 0;
+   const faded = objectHash % 9 === 0;
+   const material = style === 2 || style === 3 ? "leather" : style === 5 ? "paper" : "cloth";
+   const spineStyle = {
     height,
     width,
     backgroundColor: book.spine_color,
-    boxShadow:
-      "inset 3px 0 0 oklch(1 0 0 / 26%), inset 5px 0 0 oklch(1 0 0 / 10%), inset -3px 0 0 oklch(0 0 0 / 45%), 0 2px 3px oklch(0 0 0 / 40%)",
   } as const;
 
   const inner = (
     <>
+       <span aria-hidden className={cn("spine-material", `spine-material-${material}`, faded && "spine-faded")} />
       <Binding style={style} />
       <span
-        className="pointer-events-none absolute inset-x-0 z-[1] flex justify-center overflow-hidden px-1"
+         data-spine-title
+         className="pointer-events-none absolute inset-x-0 z-[1] flex justify-center overflow-hidden px-1"
         style={{ top: titleTop, bottom: titleBottom }}
       >
         <span
-          className="vertical-text block h-full max-h-full overflow-hidden text-ellipsis whitespace-nowrap text-[12px] leading-none sm:text-[13px]"
+           className={cn("vertical-text block h-full max-h-full overflow-hidden text-ellipsis whitespace-nowrap text-[12px] leading-none sm:text-[13px]", style === 0 && "spine-title-gilt")}
           style={{ color: ink }}
         >
           {book.title}
         </span>
       </span>
-      <Slip>{book.shelf_mark}</Slip>
+       <Slip>{book.shelf_mark}</Slip>
     </>
   );
 
 
-  const shell =
-    "relative mt-[6px] flex shrink-0 items-start justify-center overflow-hidden rounded-b-[2px] outline-none transition-transform focus-visible:ring-2 focus-visible:ring-ring motion-safe:hover:-translate-y-1";
+   const shell =
+     "physical-spine relative mt-[6px] flex shrink-0 items-start justify-center overflow-hidden rounded-b-[2px] outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
   return (
-    <div ref={ref} className="relative shrink-0" onMouseEnter={openHover} onMouseLeave={closeHover}>
+     <div
+       ref={ref}
+       className="book-object relative shrink-0"
+       style={{ "--spine-lean": `${lean}deg` } as CSSProperties}
+       onMouseEnter={openHover}
+       onMouseLeave={closeHover}
+     >
       <PageBlock />
       {onLoan && <Ribbon />}
       {setAside && <SetAsideSlip />}
