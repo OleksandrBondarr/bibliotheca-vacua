@@ -96,9 +96,8 @@ export const getBook = createServerFn({ method: "GET" })
     const db = createPublicClient();
     const { data: book, error } = await db
       .from("books")
-      .select(
-        `${SPINE_COLUMNS}, kind, year, review, kept_by_name, kept_at, publisher:publishers(name, city, style_note)`,
-      )
+      .select(`${SPINE_COLUMNS}, kept_by_name, kept_at`)
+
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw new Error(error.message);
