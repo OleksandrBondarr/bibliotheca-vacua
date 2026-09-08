@@ -87,8 +87,8 @@ export function Shelf({
         <div
           ref={scroller}
           className={cn(
-            "shelf-scroll shelf-bed flex items-end gap-[3px] px-4 pt-3 [perspective:700px]",
-            books.length > 0 && "min-h-[208px]",
+            "shelf-scroll shelf-bed flex items-end gap-[3px] px-4 pt-3",
+            books.length > 0 && "h-[232px]",
           )}
         >
           {vitrineTheme && (
