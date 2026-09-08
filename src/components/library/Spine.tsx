@@ -41,66 +41,89 @@ function CatalogueCard({ book, hideCue }: { book: SpineBook; hideCue?: boolean }
 }
 
 
+/** Deterministic binding style per publishing house. */
+function houseHash(book: SpineBook) {
+  const key = book.publisher?.name ?? "without an imprint";
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) % 100000;
+  return h;
+}
+
+/** Binding decoration drawn over the spine colour. */
+function Binding({ book, style, height }: { book: SpineBook; style: number; height: number }) {
+  const gilt = "oklch(0.82 0.09 82 / 70%)";
+  const dark = "oklch(0 0 0 / 30%)";
+  const light = "oklch(1 0 0 / 14%)";
+
+  if (style === 0)
+    return (
+      <span aria-hidden className="pointer-events-none absolute inset-0">
+        <span className="absolute inset-x-[3px] top-[10px] h-px" style={{ background: gilt }} />
+        <span className="absolute inset-x-[3px] top-[14px] h-px" style={{ background: gilt }} />
+        <span className="absolute inset-x-[3px] bottom-[10px] h-px" style={{ background: gilt }} />
+        <span className="absolute inset-x-[3px] bottom-[14px] h-px" style={{ background: gilt }} />
+      </span>
+    );
+
+  if (style === 1)
+    return (
+      <span
+        aria-hidden
+        className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 border border-[oklch(0_0_0/25%)] bg-paper px-1 text-[9px] leading-[1.4] tabular-nums text-ink"
+      >
+        {String(200 + (houseHash(book) + book.pages) % 8800)}
+      </span>
+    );
+
+  if (style === 2)
+    return (
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0"
+        style={{ top: Math.round(height * 0.16), height: Math.round(height * 0.3), background: dark }}
+      />
+    );
+
+  if (style === 3)
+    return (
+      <span aria-hidden className="pointer-events-none absolute inset-0">
+        <span className="absolute inset-x-[4px] top-[9px] h-px" style={{ background: light }} />
+        <span className="absolute inset-x-[4px] top-[12px] h-px" style={{ background: light }} />
+        <span
+          className="absolute bottom-3 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 border"
+          style={{ borderColor: gilt }}
+        />
+      </span>
+    );
+
+  if (style === 4)
+    return (
+      <span aria-hidden className="pointer-events-none absolute inset-0">
+        <span className="absolute inset-x-0 top-0 h-[9px]" style={{ background: light }} />
+        <span className="absolute inset-x-0 bottom-0 h-[9px]" style={{ background: light }} />
+      </span>
+    );
+
+  return (
+    <span
+      aria-hidden
+      className="pointer-events-none absolute inset-0"
+      style={{
+        background:
+          "repeating-linear-gradient(to right, oklch(1 0 0 / 4%) 0 1px, transparent 1px 4px, oklch(0 0 0 / 6%) 4px 5px, transparent 5px 9px)",
+      }}
+    />
+  );
+}
+
 export function Spine({ book }: { book: SpineBook }) {
   const isMobile = useIsMobile();
   const height = 132 + Math.round((book.pages / 420) * 76);
   const width = 40 + Math.min(12, Math.round((book.pages / 420) * 12));
   const taken = book.status === "taken_forever";
-  const ref = useRef<HTMLDivElement>(null);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [hover, setHover] = useState<{ left: number; top: number } | null>(null);
-  const [sheet, setSheet] = useState(false);
+  const style = houseHash(book) % 6;
+  const titleTop = [12, 14, Math.round(height * 0.5), 20, 16, 14][style] ?? 12;
 
-  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
-
-  useEffect(() => {
-    if (!sheet) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setSheet(false);
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [sheet]);
-
-  function openHover() {
-    if (isMobile) return;
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => {
-      const r = ref.current?.getBoundingClientRect();
-      if (!r) return;
-      const cardWidth = 288;
-      const left = Math.min(r.right + 10, window.innerWidth - cardWidth - 12);
-      const top = Math.max(12, Math.min(r.top, window.innerHeight - 320));
-      setHover({ left, top });
-    }, 250);
-  }
-
-  function closeHover() {
-    if (timer.current) clearTimeout(timer.current);
-    setHover(null);
-  }
-
-  const label = `${book.title}, ${book.author}${taken ? " (taken forever)" : ""}`;
-  const spineStyle = {
-    height,
-    width,
-    backgroundColor: book.spine_color,
-    boxShadow:
-      "inset 3px 0 0 oklch(1 0 0 / 26%), inset 5px 0 0 oklch(1 0 0 / 10%), inset -3px 0 0 oklch(0 0 0 / 45%), 0 2px 3px oklch(0 0 0 / 40%)",
-  } as const;
-
-  const inner = (
-    <span
-      className="vertical-text pt-3 text-[12px] leading-none text-spine-ink sm:text-[13px]"
-      style={{ maxHeight: height - 14, display: "block", overflow: "hidden" }}
-    >
-      <span className="block truncate" style={{ maxHeight: height - 14 }}>
-        {book.title}
-        <span className="opacity-70">&nbsp;·&nbsp;{book.author}</span>
-      </span>
-    </span>
-  );
-
-  const shell =
-    "relative flex shrink-0 items-start justify-center overflow-hidden rounded-[2px] outline-none transition-transform focus-visible:ring-2 focus-visible:ring-ring motion-safe:hover:-translate-y-1";
 
   return (
     <div ref={ref} className="relative shrink-0" onMouseEnter={openHover} onMouseLeave={closeHover}>
