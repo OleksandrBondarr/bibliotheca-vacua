@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { LOAN_DAYS, MAX_ACTIVE_LOANS, MAX_LOANS_PER_DAY } from "./departments";
 
@@ -17,7 +19,7 @@ type LoanBook = {
 };
 
 /** Expire the caller's overdue loans and wipe their pages. */
-async function expireStaleLoans(supabase: SupabaseCtx, userId: string) {
+async function expireStaleLoans(supabase: SupabaseClient<Database>, userId: string) {
   await supabase
     .from("loans")
     .update({ status: "returned", pages: [] })
@@ -26,13 +28,6 @@ async function expireStaleLoans(supabase: SupabaseCtx, userId: string) {
     .lt("ends_at", new Date().toISOString());
 }
 
-type SupabaseCtx = Parameters<typeof expireStaleLoansTyped>[0];
-// Helper purely to derive the client type from the middleware context.
-async function expireStaleLoansTyped(
-  supabase: Awaited<ReturnType<typeof getCtx>>["supabase"],
-) {
-  return supabase;
-}
 async function getCtx() {
   return null as unknown as { supabase: import("@supabase/supabase-js").SupabaseClient<import("@/integrations/supabase/types").Database> };
 }

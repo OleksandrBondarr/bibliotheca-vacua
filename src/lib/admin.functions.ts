@@ -1,11 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 import { DEPARTMENTS, isDepartment } from "./departments";
 
-type Ctx = Parameters<Parameters<ReturnType<typeof createServerFn>["handler"]>[0]>[0];
 
-async function assertAdmin(context: { supabase: any; userId: string }) {
+async function assertAdmin(context: { supabase: SupabaseClient<Database>; userId: string }) {
   const { data: isAdmin, error } = await context.supabase.rpc("has_role", {
     _user_id: context.userId,
     _role: "admin",
@@ -35,7 +36,8 @@ export const addShelf = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    if (!isDepartment(data.department)) throw new Error("No such department");
+    const department = data.department;
+    if (!isDepartment(department)) throw new Error("No such department");
     const { supabase } = context;
     const { generateCatalogue, generateReview } = await import("./anthropic.server");
 
@@ -84,7 +86,7 @@ export const addShelf = createServerFn({ method: "POST" })
         publisher_id: publisherIds.get(e.publisher_name) ?? null,
         year: e.year,
         pages: e.pages,
-        department: data.department,
+        department,
         spine_color: e.spine_color,
         review: reviews[i],
       })),
@@ -117,5 +119,3 @@ export const fillMissingReviews = createServerFn({ method: "POST" })
     }
     return { written };
   });
-
-export type _Ctx = Ctx;

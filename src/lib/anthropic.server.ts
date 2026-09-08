@@ -43,7 +43,7 @@ export async function askClaude(system: string, user: string, maxTokens: number)
 /** Pull the first JSON array/object out of a model reply that may be wrapped in prose or fences. */
 export function extractJson<T>(text: string): T {
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const candidate = fenced ? fenced[1] : text;
+  const candidate = fenced?.[1] ?? text;
   const start = Math.min(
     ...["[", "{"].map((ch) => candidate.indexOf(ch)).filter((i) => i >= 0),
   );
