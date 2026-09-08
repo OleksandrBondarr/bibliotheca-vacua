@@ -79,8 +79,8 @@ function AboutPage() {
         <p>
           Bibliotheca Vacua opened on 12 September 2026. It is made by one person in Ukraine and written by machines
           under the supervision of a critic who does not exist either. Correspondence:{" "}
-          <a href="mailto:librarian@example.com" className="underline underline-offset-4">
-            librarian@example.com
+          <a href="mailto:librarian@bibliothecavacua.com" className="underline underline-offset-4">
+            librarian@bibliothecavacua.com
           </a>
           .
         </p>
