@@ -10,6 +10,13 @@ import { departmentLabel } from "@/lib/departments";
 
 
 export const Route = createFileRoute("/")({
+  loader: async ({ context }) => {
+    const [, origin] = await Promise.all([
+      context.queryClient.ensureQueryData(hallQuery),
+      getRequestOrigin(),
+    ]);
+    return { origin };
+  },
   head: ({ loaderData }) => ({
     meta: [
       { title: "Bibliotheca Vacua — a library of books that do not exist" },
@@ -21,13 +28,6 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  loader: async ({ context }) => {
-    const [, origin] = await Promise.all([
-      context.queryClient.ensureQueryData(hallQuery),
-      getRequestOrigin(),
-    ]);
-    return { origin };
-  },
   component: Hall,
   errorComponent: () => (
     <Frame env="hall">
