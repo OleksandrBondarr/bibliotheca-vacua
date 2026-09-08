@@ -200,7 +200,7 @@ export const returnBook = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { data: before } = await supabase
       .from("loans")
-      .select("current_page, book:books(id, department)")
+      .select("current_page, book:books(id, department, pages)")
       .eq("id", data.loanId)
       .maybeSingle();
     const { error } = await supabase
@@ -209,8 +209,10 @@ export const returnBook = createServerFn({ method: "POST" })
       .eq("id", data.loanId)
       .eq("status", "active");
     if (error) throw new Error(error.message);
-    if (before && before.current_page < 5) {
-      const b = before.book as unknown as { id: string; department: string } | null;
+    const rb = before?.book as unknown as { id: string; department: string; pages: number } | null;
+    // "Returned early" means before a fifth of the book was read.
+    if (before && rb && before.current_page < Math.max(2, Math.ceil(rb.pages * 0.2))) {
+      const b = rb;
       await noteSignal(supabase as never, userId, "returned_early", { department: b?.department, bookId: b?.id });
     }
     return { ok: true };

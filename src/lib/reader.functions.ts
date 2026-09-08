@@ -8,6 +8,7 @@ import type { SpineBook } from "./catalogue.functions";
 export const SIGNAL_KINDS = [
   "department_visit",
   "card_read",
+  "review_end",
   "taken",
   "returned_early",
   "finished",
@@ -97,14 +98,27 @@ export const getHeldShelf = createServerFn({ method: "GET" })
     const { data: heldRaw } = await supabase
       .from("books")
       .select(HELD_COLUMNS)
-      .eq("held_for_user_id", userId)
+      .eq("private_for", userId)
       .order("created_at", { ascending: false });
     let held = ((heldRaw ?? []) as unknown as SpineBook[]).filter((b) => !dismissed.has(b.id));
 
     const lastAt = state?.generated_at ? new Date(state.generated_at).getTime() : 0;
     const freshEnough = Date.now() - lastAt < DAY;
     const newSignals = total - (state?.signal_count ?? 0);
-    const shouldGenerate = !freshEnough && (!state?.generated_at || held.length === 0 || newSignals >= SIGNALS_BEFORE_SHELF);
+    // Cost guard: at most three private books written per reader per day.
+    const dayAgo = new Date(Date.now() - DAY).toISOString();
+    const { count: writtenToday } = await supabase
+      .from("books")
+      .select("id", { count: "exact", head: true })
+      .eq("private_for", userId)
+      .gte("created_at", dayAgo);
+    const budget = Math.max(0, 3 - (writtenToday ?? 0));
+    const want = Math.max(0, 3 - held.length);
+    const shouldGenerate =
+      !freshEnough &&
+      budget > 0 &&
+      want > 0 &&
+      (!state?.generated_at || held.length < 3 || newSignals >= SIGNALS_BEFORE_SHELF);
 
     let note = state?.note ?? null;
 
@@ -123,6 +137,7 @@ export const getHeldShelf = createServerFn({ method: "GET" })
       const { generateReview } = await import("./anthropic.server");
       const shelf = await generateHeldShelf(summary, (existing ?? []).map((b) => b.title));
 
+      shelf.entries = shelf.entries.slice(0, Math.min(want, budget));
       if (shelf.entries.length > 0) {
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -171,7 +186,7 @@ export const getHeldShelf = createServerFn({ method: "GET" })
               department: e.department as never,
               spine_color: e.spine_color,
               review: reviews[i] ?? null,
-              held_for_user_id: userId,
+              private_for: userId,
             })),
           )
           .select(HELD_COLUMNS);
@@ -198,7 +213,7 @@ export const dismissHeldBook = createServerFn({ method: "POST" })
       .from("books")
       .select("id, department")
       .eq("id", data.bookId)
-      .eq("held_for_user_id", userId)
+      .eq("private_for", userId)
       .maybeSingle();
     if (!book) throw new Error("That book is not on your shelf.");
 

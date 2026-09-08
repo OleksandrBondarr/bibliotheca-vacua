@@ -67,6 +67,8 @@ function Hall() {
         <Shelf books={data.featured} empty="The shelf is being assembled." vitrine />
       </section>
 
+      <HeldShelf className="mb-14 mt-0" />
+
       <section aria-labelledby="departments" className="mb-14">
         <h2 id="departments" className="mb-3 px-1 text-small-caps text-sm text-muted-foreground">
           Card catalogue
@@ -113,7 +115,6 @@ function Hall() {
         ))}
       </section>
       </div>
-      <HeldShelf />
     </Frame>
   );
 }

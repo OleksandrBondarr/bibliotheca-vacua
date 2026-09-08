@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import type { SpineBook } from "@/lib/catalogue.functions";
+import { useDragScroll } from "@/hooks/useDragScroll";
 import { cn } from "@/lib/utils";
 import { Spine } from "./Spine";
 
@@ -25,11 +26,13 @@ export function Shelf({
   plaque?: ReactNode;
   vitrine?: boolean;
 }) {
+  const scroller = useDragScroll<HTMLDivElement>();
   return (
     <div>
       {plaque}
       <div className={cn(vitrine && "vitrine rounded-sm pt-1")}>
         <div
+          ref={scroller}
           className={cn(
             "shelf-scroll flex items-end gap-[3px] px-4 pt-3",
             books.length > 0 && "min-h-[208px]",

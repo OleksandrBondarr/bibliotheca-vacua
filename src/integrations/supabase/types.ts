@@ -20,12 +20,12 @@ export type Database = {
           created_at: string
           department: Database["public"]["Enums"]["department"]
           featured: boolean
-          held_for_user_id: string | null
           id: string
           kept_at: string | null
           kept_by_name: string | null
           kind: string
           pages: number
+          private_for: string | null
           publisher_id: string | null
           review: string | null
           shelf: string | null
@@ -39,12 +39,12 @@ export type Database = {
           created_at?: string
           department: Database["public"]["Enums"]["department"]
           featured?: boolean
-          held_for_user_id?: string | null
           id?: string
           kept_at?: string | null
           kept_by_name?: string | null
           kind: string
           pages: number
+          private_for?: string | null
           publisher_id?: string | null
           review?: string | null
           shelf?: string | null
@@ -58,12 +58,12 @@ export type Database = {
           created_at?: string
           department?: Database["public"]["Enums"]["department"]
           featured?: boolean
-          held_for_user_id?: string | null
           id?: string
           kept_at?: string | null
           kept_by_name?: string | null
           kind?: string
           pages?: number
+          private_for?: string | null
           publisher_id?: string | null
           review?: string | null
           shelf?: string | null
