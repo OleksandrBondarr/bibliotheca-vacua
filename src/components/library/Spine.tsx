@@ -184,7 +184,7 @@ function luminance(hex: string | null) {
 
 export function Spine({ book, onLoan = false, setAside = false }: { book: SpineBook; onLoan?: boolean; setAside?: boolean }) {
   const isMobile = useIsMobile();
-  const height = 132 + Math.round((book.pages / 420) * 76);
+  const height = Math.max(184, 132 + Math.round((book.pages / 420) * 76));
   const width = 40 + Math.min(12, Math.round((book.pages / 420) * 12));
   const taken = book.status === "taken_forever";
   const style = houseHash(book) % 6;
