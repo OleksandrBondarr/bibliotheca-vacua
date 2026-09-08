@@ -168,7 +168,7 @@
     ),
     linear-gradient(to bottom, var(--color-wood-light), var(--color-wood) 40%, var(--color-wood-dark));
   box-shadow:
-    inset 0 3px 0 color-mix(in oklch, var(--color-wood-light), white 10%),
+    inset 0 3px 0 color-mix(in oklch, var(--color-wood-light), var(--color-paper) 10%),
     inset 0 -3px 0 var(--color-wood-dark),
     0 7px 13px oklch(0 0 0 / 45%);
 }

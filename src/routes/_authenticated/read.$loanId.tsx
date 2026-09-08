@@ -140,7 +140,7 @@ function ReadingRoom() {
             <Prose text={loan.text} dropCap={loan.currentPage === 1} className="text-[18px] leading-[1.7]" />
           )}
         </article>
-        <PageImprint reader={loan.readerName} page={loan.currentPage} total={total} />
+        {!atEnd && <PageImprint reader={loan.readerName} page={loan.currentPage} total={total} />}
 
         {turning.error && <p className="mt-6 text-center text-sm text-destructive">{turning.error.message}</p>}
 
