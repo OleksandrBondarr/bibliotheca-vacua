@@ -274,3 +274,35 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Shelves scroll sideways with no native scrollbar; a thin one appears on hover (desktop) */
+@utility shelf-scroll {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    height: 0;
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 3px;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      scrollbar-width: thin;
+      scrollbar-color: oklch(0.72 0.1 80 / 45%) transparent;
+    }
+
+    &:hover::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    &:hover::-webkit-scrollbar-thumb {
+      background: oklch(0.72 0.1 80 / 45%);
+    }
+  }
+}
