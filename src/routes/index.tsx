@@ -61,26 +61,28 @@ function Hall() {
         <h2 id="departments" className="mb-3 px-1 text-small-caps text-sm text-muted-foreground">
           Card catalogue
         </h2>
-        <div className="grid grid-cols-2 gap-[4px] sm:grid-cols-3">
-          {DEPARTMENTS.map((d) => (
-            <Link
-              key={d.slug}
-              to="/department/$slug"
-              params={{ slug: d.slug }}
-              className="drawer group relative flex aspect-[2/3] flex-col items-center justify-between rounded-sm p-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <span className="w-full border border-brass/70 bg-brass/10 p-[3px] shadow-[inset_0_1px_0_oklch(1_0_0/12%)]">
-                <span className="block bg-paper px-2 py-1.5 text-center text-ink">
-                  <span className="text-small-caps block text-[15px] leading-tight">{d.label}</span>
-                  <span className="mt-1 block text-[15px] italic leading-tight text-ink-soft">{d.note}</span>
+        <div className="rounded-sm border border-wood-light/40 bg-wood-dark/40 p-1 shadow-[inset_0_1px_0_oklch(1_0_0/6%),0_4px_12px_oklch(0_0_0/35%)]">
+          <div className="grid grid-cols-2 gap-[3px] sm:grid-cols-3">
+            {DEPARTMENTS.map((d) => (
+              <Link
+                key={d.slug}
+                to="/department/$slug"
+                params={{ slug: d.slug }}
+                className="drawer group relative flex aspect-[3/2] h-[130px] flex-col items-center justify-between rounded-sm p-2 outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-[150px]"
+              >
+                <span className="w-full border border-brass/70 bg-brass/10 p-[3px] shadow-[inset_0_1px_0_oklch(1_0_0/12%)]">
+                  <span className="block bg-paper px-2 py-1 text-center text-ink">
+                    <span className="text-small-caps block text-[15px] leading-tight">{d.label}</span>
+                    <span className="mt-0.5 block text-[15px] italic leading-tight text-ink-soft">{d.note}</span>
+                  </span>
                 </span>
-              </span>
-              <span
-                aria-hidden
-                className="mb-1 h-2.5 w-10 rounded-full bg-brass/85 shadow-[0_1px_0_oklch(0_0_0/55%),inset_0_1px_0_oklch(1_0_0/35%)]"
-              />
-            </Link>
-          ))}
+                <span
+                  aria-hidden
+                  className="mb-1 h-2 w-8 rounded-full bg-brass/85 shadow-[0_1px_0_oklch(0_0_0/55%),inset_0_1px_0_oklch(1_0_0/35%)]"
+                />
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
