@@ -1,0 +1,140 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
+import { addLemShelf, addShelf, fillMissingReviews, getShelfCounts } from "@/lib/admin.functions";
+import { DEPARTMENTS } from "@/lib/departments";
+import { Frame, Rule, buttonPrimary, buttonQuiet } from "@/components/library/Frame";
+
+export const Route = createFileRoute("/_authenticated/admin")({
+  head: () => ({
+    meta: [
+      { title: "Librarian's desk — Bibliotheca Vacua" },
+      { name: "description", content: "Seed the catalogue and add shelves." },
+      { property: "og:title", content: "Librarian's desk" },
+      { property: "og:description", content: "Catalogue maintenance." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: AdminPage,
+});
+
+function AdminPage() {
+  const qc = useQueryClient();
+  const counts = useServerFn(getShelfCounts);
+  const shelf = useServerFn(addShelf);
+  const lem = useServerFn(addLemShelf);
+  const fill = useServerFn(fillMissingReviews);
+  const [log, setLog] = useState<string[]>([]);
+  const note = (s: string) => setLog((l) => [s, ...l].slice(0, 12));
+
+  const { data, error, isPending } = useQuery({ queryKey: ["shelf-counts"], queryFn: () => counts(), retry: false });
+
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ["shelf-counts"] });
+    qc.invalidateQueries({ queryKey: ["hall"] });
+    qc.invalidateQueries({ queryKey: ["department"] });
+  };
+
+  const seed = useMutation({
+    mutationFn: async () => {
+      for (const d of DEPARTMENTS) {
+        const have = data?.[d.slug] ?? 0;
+        if (have >= 14) continue;
+        note(`Cataloguing ${d.label}…`);
+        const r = await shelf({ data: { department: d.slug, count: Math.min(14, 14 - have) } });
+        note(`${d.label}: ${r.added} books added.`);
+        refresh();
+      }
+    },
+    onError: (e) => note(`Failed: ${e.message}`),
+    onSuccess: () => note("Seeding complete."),
+  });
+
+  const addOne = useMutation({
+    mutationFn: async (department: string) => {
+      note(`Adding a shelf to ${department}…`);
+      return shelf({ data: { department, count: 14 } });
+    },
+    onSuccess: (r) => {
+      note(`${r.department}: ${r.added} books added.`);
+      refresh();
+    },
+    onError: (e) => note(`Failed: ${e.message}`),
+  });
+
+  const addLem = useMutation({
+    mutationFn: async () => {
+      note("Assembling the Lem-neighbourhood shelf…");
+      return lem();
+    },
+    onSuccess: (r) => {
+      note(`Lem shelf: ${r.added} featured books added.`);
+      refresh();
+    },
+    onError: (e) => note(`Failed: ${e.message}`),
+  });
+
+  const fillReviews = useMutation({
+    mutationFn: () => fill(),
+    onSuccess: (r) => {
+      note(`${r.written} reviews written.`);
+      refresh();
+    },
+    onError: (e) => note(`Failed: ${e.message}`),
+  });
+
+  const busy = seed.isPending || addOne.isPending || addLem.isPending || fillReviews.isPending;
+
+  return (
+    <Frame env="paper" narrow>
+      <h1 className="pt-10 text-3xl">Librarian's desk</h1>
+      <Rule />
+      {isPending && <p className="italic text-muted-foreground">Counting the shelves…</p>}
+      {error && <p className="text-destructive">{error.message}</p>}
+      {data && (
+        <>
+          <table className="w-full text-sm">
+            <tbody>
+              {DEPARTMENTS.map((d) => (
+                <tr key={d.slug} className="border-b border-border">
+                  <td className="py-2">{d.label}</td>
+                  <td className="py-2 text-right tabular-nums text-muted-foreground">{data[d.slug] ?? 0} books</td>
+                  <td className="py-2 pl-4 text-right">
+                    <button type="button" disabled={busy} onClick={() => addOne.mutate(d.slug)} className="text-sm underline underline-offset-4 disabled:opacity-50">
+                      add a shelf
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="mt-8 space-y-3">
+            <button type="button" disabled={busy} onClick={() => seed.mutate()} className={buttonPrimary}>
+              {seed.isPending ? "Seeding…" : "Seed catalogue (fill thin departments)"}
+            </button>
+            <button type="button" disabled={busy} onClick={() => addLem.mutate()} className={buttonQuiet}>
+              {addLem.isPending ? "Assembling…" : "Add the Lem-neighbourhood shelf"}
+            </button>
+            <button type="button" disabled={busy} onClick={() => fillReviews.mutate()} className={buttonQuiet}>
+              {fillReviews.isPending ? "Writing…" : "Write missing reviews"}
+            </button>
+            <p className="text-[13px] text-muted-foreground">
+              Each shelf takes a minute or two to catalogue and review. Keep this page open.
+            </p>
+          </div>
+        </>
+      )}
+
+      {log.length > 0 && (
+        <ul className="mt-8 space-y-1 text-sm text-muted-foreground">
+          {log.map((l, i) => (
+            <li key={i}>{l}</li>
+          ))}
+        </ul>
+      )}
+    </Frame>
+  );
+}
