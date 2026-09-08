@@ -90,7 +90,7 @@ function Binding({ style }: { style: number }) {
   if (style === 3)
     return (
       <span aria-hidden className="pointer-events-none absolute inset-0">
-        <span data-spine-decoration className="absolute inset-x-[4px] top-[7px] h-px" style={{ background: light }} />
+        <span data-spine-decoration className="absolute inset-x-[4px] top-[4px] h-px" style={{ background: light }} />
         <span data-spine-decoration className="absolute inset-x-[4px] top-[7px] h-px" style={{ background: light }} />
       </span>
     );
