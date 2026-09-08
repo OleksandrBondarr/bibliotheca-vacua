@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      auth_attempts: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          ip: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          ip?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          ip?: string | null
+        }
+        Relationships: []
+      }
       books: {
         Row: {
           author: string
@@ -298,6 +319,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      note_keep_name: { Args: { _book_id: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user"
