@@ -1,7 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { queryOptions } from "@tanstack/react-query";
 import { z } from "zod";
-import { isDepartment } from "./departments";
+import { DEPARTMENTS, isDepartment, type Department } from "./departments";
+
+export type PublisherRef = { name: string; city: string; style_note: string | null } | null;
 
 export type SpineBook = {
   id: string;
@@ -12,15 +14,15 @@ export type SpineBook = {
   status: "available" | "taken_forever";
   department: string;
   featured: boolean;
-};
-
-export type BookDetail = SpineBook & {
   kind: string;
   year: number;
   review: string | null;
+  publisher: PublisherRef;
+};
+
+export type BookDetail = SpineBook & {
   kept_by_name: string | null;
   kept_at: string | null;
-  publisher: { name: string; city: string; style_note: string | null } | null;
 };
 
 export type TakenBook = {
@@ -32,27 +34,45 @@ export type TakenBook = {
   kept_at: string | null;
 };
 
-const SPINE_COLUMNS = "id, title, author, pages, spine_color, status, department, featured";
+const SPINE_COLUMNS =
+  "id, title, author, pages, spine_color, status, department, featured, kind, year, review, publisher:publishers(name, city, style_note)";
 
 export const getHall = createServerFn({ method: "GET" }).handler(async () => {
   const { createPublicClient } = await import("./public-client.server");
   const db = createPublicClient();
 
-  const [total, taken, arrivals, featured] = await Promise.all([
+  const deptSlugs = DEPARTMENTS.map((d) => d.slug);
+
+  const [total, taken, arrivals, featured, ...deptResults] = await Promise.all([
     db.from("books").select("id", { count: "exact", head: true }),
     db.from("books").select("id", { count: "exact", head: true }).eq("status", "taken_forever"),
     db.from("books").select(SPINE_COLUMNS).order("created_at", { ascending: false }).limit(18),
     db.from("books").select(SPINE_COLUMNS).eq("featured", true).order("created_at", { ascending: true }),
+    ...deptSlugs.map((slug) =>
+      db
+        .from("books")
+        .select(SPINE_COLUMNS)
+        .eq("department", slug)
+        .order("created_at", { ascending: false })
+        .limit(14),
+    ),
   ]);
   if (arrivals.error) throw new Error(arrivals.error.message);
+
+  const departments = deptSlugs.map((slug, i) => ({
+    slug: slug as Department,
+    books: (deptResults[i]?.data ?? []) as SpineBook[],
+  }));
 
   return {
     total: total.count ?? 0,
     takenForever: taken.count ?? 0,
     arrivals: (arrivals.data ?? []) as SpineBook[],
     featured: (featured.data ?? []) as SpineBook[],
+    departments,
   };
 });
+
 
 export const listDepartment = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => z.object({ department: z.string() }).parse(input))
@@ -76,9 +96,8 @@ export const getBook = createServerFn({ method: "GET" })
     const db = createPublicClient();
     const { data: book, error } = await db
       .from("books")
-      .select(
-        `${SPINE_COLUMNS}, kind, year, review, kept_by_name, kept_at, publisher:publishers(name, city, style_note)`,
-      )
+      .select(`${SPINE_COLUMNS}, kept_by_name, kept_at`)
+
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw new Error(error.message);

@@ -3,7 +3,9 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { hallQuery } from "@/lib/catalogue.functions";
 import { DEPARTMENTS } from "@/lib/departments";
 import { Frame } from "@/components/library/Frame";
-import { Shelf } from "@/components/library/Shelf";
+import { DepartmentShelf, Shelf } from "@/components/library/Shelf";
+import { departmentLabel } from "@/lib/departments";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -78,12 +80,22 @@ function Hall() {
         </div>
       </section>
 
-      <section aria-labelledby="arrivals">
+      <section aria-labelledby="arrivals" className="mb-14">
         <h2 id="arrivals" className="mb-3 px-1 text-small-caps text-sm text-muted-foreground">
           New arrivals
         </h2>
         <Shelf books={data.arrivals} empty="Nothing has arrived yet." />
       </section>
+
+      <section aria-labelledby="shelves" className="space-y-10">
+        <h2 id="shelves" className="px-1 text-small-caps text-sm text-muted-foreground">
+          The shelves
+        </h2>
+        {data.departments.map((d) => (
+          <DepartmentShelf key={d.slug} slug={d.slug} label={departmentLabel(d.slug)} books={d.books} />
+        ))}
+      </section>
+
     </Frame>
   );
 }
