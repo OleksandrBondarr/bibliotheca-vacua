@@ -75,6 +75,8 @@ const DEPARTMENT_BRIEFS: Record<string, string> = {
     "Poetry collections: strict old forms applied to impossible or minute subjects; liturgical, taxonomic, or elegiac.",
   treatises:
     "Scholarly treatises and monographs on impossible subjects, argued with academic apparatus and no jokes.",
+  sciences:
+    "Scientific monographs, conference proceedings, laboratory notebooks, tables of constants and field guides in physics, biology, mathematics, geology and chemistry, concerning phenomena, organisms, materials or quantities that cannot exist. Full scientific apparatus: methods, tables, footnotes, errata. HARD RULE: the subject must be plainly impossible. Never real diseases, real drugs, real medical, pharmacological, dietary or safety claims, and nothing a reader could mistake for real science or act upon.",
   memoirs:
     "Memoirs by unlikely narrators or of unlikely occupations; plain, aggrieved, intimate.",
   reference:
