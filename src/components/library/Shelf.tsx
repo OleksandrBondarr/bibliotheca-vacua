@@ -9,6 +9,15 @@ import { useSession } from "@/hooks/useSession";
 import { cn } from "@/lib/utils";
 import { Spine } from "./Spine";
 
+export type VitrineTheme = {
+  labelLines: {
+    heading: string;
+    caption: string;
+  };
+  ribbon: boolean;
+  glowTint: "warm";
+};
+
 /** Small brass plaque fixed to the front of a shelf. */
 export function Plaque({ children }: { children: ReactNode }) {
   return (
@@ -24,12 +33,14 @@ export function Shelf({
   empty,
   plaque,
   vitrine,
+  vitrineTheme,
   privateBooks = false,
 }: {
   books: SpineBook[];
   empty?: ReactNode;
   plaque?: ReactNode;
   vitrine?: boolean;
+  vitrineTheme?: VitrineTheme;
   privateBooks?: boolean;
 }) {
   const scroller = useDragScroll<HTMLDivElement>();
@@ -47,7 +58,13 @@ export function Shelf({
   return (
     <div>
       {plaque}
-      <div className={cn(vitrine && "vitrine rounded-sm pt-1")}>
+      <div
+        className={cn(
+          vitrine && "vitrine rounded-sm pt-1",
+          vitrineTheme?.glowTint === "warm" && "vitrine-glow-warm",
+        )}
+      >
+        {vitrineTheme?.ribbon && <span aria-hidden className="vitrine-ribbon" />}
         <div
           ref={scroller}
           className={cn(
@@ -55,6 +72,16 @@ export function Shelf({
             books.length > 0 && "min-h-[208px]",
           )}
         >
+          {vitrineTheme && (
+            <aside className="vitrine-label shrink-0 self-end" aria-label="Commemorative label">
+              <span className="text-small-caps block text-[15px] leading-snug">
+                {vitrineTheme.labelLines.heading}
+              </span>
+              <span className="mt-2 block text-[15px] italic leading-snug text-ink-soft">
+                {vitrineTheme.labelLines.caption}
+              </span>
+            </aside>
+          )}
           {books.length === 0 ? (
             <p className="pb-4 text-sm italic text-muted-foreground">{empty ?? "The shelf is empty."}</p>
           ) : (

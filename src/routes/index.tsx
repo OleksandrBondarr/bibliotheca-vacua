@@ -8,7 +8,33 @@ import { Frame } from "@/components/library/Frame";
 import { HeldShelf } from "@/components/library/HeldShelf";
 import { DepartmentShelf, Shelf } from "@/components/library/Shelf";
 import { departmentLabel } from "@/lib/departments";
+import type { VitrineTheme } from "@/components/library/Shelf";
 
+const LEM_VITRINE_THEME: VitrineTheme = {
+  labelLines: {
+    heading: "12 IX 1921 – 27 III 2006 · Kraków",
+    caption: "The writer who first described this library.",
+  },
+  ribbon: true,
+  glowTint: "warm",
+};
+
+function DrawerFace({ label, note }: { label?: string; note?: string }) {
+  return (
+    <>
+      <span className="w-full border border-brass/70 bg-brass/10 p-[3px] shadow-[inset_0_1px_0_oklch(1_0_0/12%)]">
+        <span className="block min-h-[55px] bg-paper px-2 py-1 text-center text-ink">
+          {label && <span className="text-small-caps block text-[15px] leading-tight">{label}</span>}
+          {note && <span className="mt-0.5 block text-[15px] italic leading-tight text-ink-soft">{note}</span>}
+        </span>
+      </span>
+      <span
+        aria-hidden
+        className="mb-1 h-2 w-8 rounded-full bg-brass/85 shadow-[0_1px_0_oklch(0_0_0/55%),inset_0_1px_0_oklch(1_0_0/35%)]"
+      />
+    </>
+  );
+}
 
 export const Route = createFileRoute("/")({
   loader: async ({ context }) => {
@@ -64,7 +90,12 @@ function Hall() {
             Opened 12 September 2026, for the 105th birthday of the writer who first described this library.
           </p>
         </div>
-        <Shelf books={data.featured} empty="The shelf is being assembled." vitrine />
+        <Shelf
+          books={data.featured}
+          empty="The shelf is being assembled."
+          vitrine
+          vitrineTheme={LEM_VITRINE_THEME}
+        />
       </section>
 
       <HeldShelf className="mb-14 mt-0" />
@@ -74,26 +105,23 @@ function Hall() {
           Card catalogue
         </h2>
         <div className="rounded-sm border border-wood-light/40 bg-wood-dark/40 p-1 shadow-[inset_0_1px_0_oklch(1_0_0/6%),0_4px_12px_oklch(0_0_0/35%)]">
-          <div className="grid grid-cols-2 gap-[3px] sm:grid-cols-3">
+          <div className="catalogue-grid grid gap-[3px]">
             {DEPARTMENTS.map((d) => (
               <Link
                 key={d.slug}
                 to="/department/$slug"
                 params={{ slug: d.slug }}
-                className="drawer group relative flex aspect-[3/2] h-[130px] flex-col items-center justify-between rounded-sm p-2 outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-[150px]"
+                className="drawer drawer-interactive group relative flex h-[130px] min-w-0 flex-col items-center justify-between rounded-sm p-2 outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-[150px]"
               >
-                <span className="w-full border border-brass/70 bg-brass/10 p-[3px] shadow-[inset_0_1px_0_oklch(1_0_0/12%)]">
-                  <span className="block bg-paper px-2 py-1 text-center text-ink">
-                    <span className="text-small-caps block text-[15px] leading-tight">{d.label}</span>
-                    <span className="mt-0.5 block text-[15px] italic leading-tight text-ink-soft">{d.note}</span>
-                  </span>
-                </span>
-                <span
-                  aria-hidden
-                  className="mb-1 h-2 w-8 rounded-full bg-brass/85 shadow-[0_1px_0_oklch(0_0_0/55%),inset_0_1px_0_oklch(1_0_0/35%)]"
-                />
+                <DrawerFace label={d.label} note={d.note} />
               </Link>
             ))}
+            <div aria-hidden className="drawer flex h-[130px] min-w-0 flex-col items-center justify-between rounded-sm p-2 sm:h-[150px]">
+              <DrawerFace />
+            </div>
+            <div aria-hidden className="drawer catalogue-blank-tablet h-[150px] min-w-0 flex-col items-center justify-between rounded-sm p-2">
+              <DrawerFace />
+            </div>
           </div>
         </div>
       </section>
