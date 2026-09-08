@@ -191,7 +191,7 @@ export function Spine({ book, onLoan = false, setAside = false }: { book: SpineB
   const pale = luminance(book.spine_color) > 0.45;
   const ink = pale ? "oklch(0.24 0.02 60)" : "oklch(0.93 0.015 85)";
   const titleTop = 12;
-  const titleBottom = 34 + (taken ? 12 : 0);
+  const titleBottom = 34;
   const ref = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hover, setHover] = useState<{ left: number; top: number } | null>(null);
@@ -276,12 +276,6 @@ export function Spine({ book, onLoan = false, setAside = false }: { book: SpineB
           {inner}
           <PublisherMark book={book} />
         </Link>
-      )}
-
-      {taken && (
-        <span className="pointer-events-none absolute bottom-2 left-1/2 z-10 -translate-x-1/2 rotate-[-6deg] bg-paper px-1 text-[8px] uppercase tracking-wider text-ink">
-          taken
-        </span>
       )}
 
       {hover && !isMobile && (
