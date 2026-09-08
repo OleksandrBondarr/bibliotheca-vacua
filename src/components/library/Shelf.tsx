@@ -76,9 +76,9 @@ export function Shelf({
           <span
             className={cn(
               "vitrine-banner text-small-caps",
-              `vitrine-banner-paper-${vitrineTheme.banner.colors.paper}`,
-              `vitrine-banner-stitch-${vitrineTheme.banner.colors.stitch}`,
-              `vitrine-banner-ink-${vitrineTheme.banner.colors.ink}`,
+              vitrineTheme.banner.colors.paper === "warm" && "vitrine-banner-paper-warm",
+              vitrineTheme.banner.colors.stitch === "red-thread" && "vitrine-banner-stitch-red-thread",
+              vitrineTheme.banner.colors.ink === "dark" && "vitrine-banner-ink-dark",
             )}
           >
             {vitrineTheme.banner.text}
