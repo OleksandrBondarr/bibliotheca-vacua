@@ -20,6 +20,7 @@ import { Route as BookIdRouteImport } from './routes/book.$id'
 import { Route as DepartmentSlugRouteImport } from './routes/department.$slug'
 import { Route as AuthenticatedReadLoanIdRouteImport } from './routes/_authenticated/read.$loanId'
 import { Route as ApiPublicOgBookIdRouteImport } from './routes/api/public/og/book.$id'
+import { Route as ApiPublicOgPageKeyRouteImport } from './routes/api/public/og/page.$key'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -75,6 +76,11 @@ const ApiPublicOgBookIdRoute = ApiPublicOgBookIdRouteImport.update({
   path: '/api/public/og/book/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicOgPageKeyRoute = ApiPublicOgPageKeyRouteImport.update({
+  id: '/api/public/og/page/$key',
+  path: '/api/public/og/page/$key',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/department/$slug': typeof DepartmentSlugRoute
   '/read/$loanId': typeof AuthenticatedReadLoanIdRoute
   '/api/public/og/book/$id': typeof ApiPublicOgBookIdRoute
+  '/api/public/og/page/$key': typeof ApiPublicOgPageKeyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/department/$slug': typeof DepartmentSlugRoute
   '/read/$loanId': typeof AuthenticatedReadLoanIdRoute
   '/api/public/og/book/$id': typeof ApiPublicOgBookIdRoute
+  '/api/public/og/page/$key': typeof ApiPublicOgPageKeyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/department/$slug': typeof DepartmentSlugRoute
   '/_authenticated/read/$loanId': typeof AuthenticatedReadLoanIdRoute
   '/api/public/og/book/$id': typeof ApiPublicOgBookIdRoute
+  '/api/public/og/page/$key': typeof ApiPublicOgPageKeyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/department/$slug'
     | '/read/$loanId'
     | '/api/public/og/book/$id'
+    | '/api/public/og/page/$key'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/department/$slug'
     | '/read/$loanId'
     | '/api/public/og/book/$id'
+    | '/api/public/og/page/$key'
   id:
     | '__root__'
     | '/'
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/department/$slug'
     | '/_authenticated/read/$loanId'
     | '/api/public/og/book/$id'
+    | '/api/public/og/page/$key'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -163,6 +175,7 @@ export interface RootRouteChildren {
   BookIdRoute: typeof BookIdRoute
   DepartmentSlugRoute: typeof DepartmentSlugRoute
   ApiPublicOgBookIdRoute: typeof ApiPublicOgBookIdRoute
+  ApiPublicOgPageKeyRoute: typeof ApiPublicOgPageKeyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -244,6 +257,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicOgBookIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/og/page/$key': {
+      id: '/api/public/og/page/$key'
+      path: '/api/public/og/page/$key'
+      fullPath: '/api/public/og/page/$key'
+      preLoaderRoute: typeof ApiPublicOgPageKeyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -271,6 +291,7 @@ const rootRouteChildren: RootRouteChildren = {
   BookIdRoute: BookIdRoute,
   DepartmentSlugRoute: DepartmentSlugRoute,
   ApiPublicOgBookIdRoute: ApiPublicOgBookIdRoute,
+  ApiPublicOgPageKeyRoute: ApiPublicOgPageKeyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
