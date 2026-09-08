@@ -10,33 +10,133 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as TakenRouteImport } from './routes/taken'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedCardRouteImport } from './routes/_authenticated/card'
+import { Route as BookIdRouteImport } from './routes/book.$id'
+import { Route as DepartmentSlugRouteImport } from './routes/department.$slug'
+import { Route as AuthenticatedReadLoanIdRouteImport } from './routes/_authenticated/read.$loanId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TakenRoute = TakenRouteImport.update({
+  id: '/taken',
+  path: '/taken',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCardRoute = AuthenticatedCardRouteImport.update({
+  id: '/card',
+  path: '/card',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const BookIdRoute = BookIdRouteImport.update({
+  id: '/book/$id',
+  path: '/book/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DepartmentSlugRoute = DepartmentSlugRouteImport.update({
+  id: '/department/$slug',
+  path: '/department/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedReadLoanIdRoute = AuthenticatedReadLoanIdRouteImport.update({
+  id: '/read/$loanId',
+  path: '/read/$loanId',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/taken': typeof TakenRoute
+  '/admin': typeof AuthenticatedAdminRoute
+  '/card': typeof AuthenticatedCardRoute
+  '/book/$id': typeof BookIdRoute
+  '/department/$slug': typeof DepartmentSlugRoute
+  '/read/$loanId': typeof AuthenticatedReadLoanIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/taken': typeof TakenRoute
+  '/admin': typeof AuthenticatedAdminRoute
+  '/card': typeof AuthenticatedCardRoute
+  '/book/$id': typeof BookIdRoute
+  '/department/$slug': typeof DepartmentSlugRoute
+  '/read/$loanId': typeof AuthenticatedReadLoanIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/taken': typeof TakenRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/card': typeof AuthenticatedCardRoute
+  '/book/$id': typeof BookIdRoute
+  '/department/$slug': typeof DepartmentSlugRoute
+  '/_authenticated/read/$loanId': typeof AuthenticatedReadLoanIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/taken'
+    | '/admin'
+    | '/card'
+    | '/book/$id'
+    | '/department/$slug'
+    | '/read/$loanId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/taken'
+    | '/admin'
+    | '/card'
+    | '/book/$id'
+    | '/department/$slug'
+    | '/read/$loanId'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/taken'
+    | '/_authenticated/admin'
+    | '/_authenticated/card'
+    | '/book/$id'
+    | '/department/$slug'
+    | '/_authenticated/read/$loanId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  TakenRoute: typeof TakenRoute
+  BookIdRoute: typeof BookIdRoute
+  DepartmentSlugRoute: typeof DepartmentSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +148,87 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/taken': {
+      id: '/taken'
+      path: '/taken'
+      fullPath: '/taken'
+      preLoaderRoute: typeof TakenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/card': {
+      id: '/_authenticated/card'
+      path: '/card'
+      fullPath: '/card'
+      preLoaderRoute: typeof AuthenticatedCardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/book/$id': {
+      id: '/book/$id'
+      path: '/book/$id'
+      fullPath: '/book/$id'
+      preLoaderRoute: typeof BookIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/department/$slug': {
+      id: '/department/$slug'
+      path: '/department/$slug'
+      fullPath: '/department/$slug'
+      preLoaderRoute: typeof DepartmentSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/read/$loanId': {
+      id: '/_authenticated/read/$loanId'
+      path: '/read/$loanId'
+      fullPath: '/read/$loanId'
+      preLoaderRoute: typeof AuthenticatedReadLoanIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedCardRoute: typeof AuthenticatedCardRoute
+  AuthenticatedReadLoanIdRoute: typeof AuthenticatedReadLoanIdRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedCardRoute: AuthenticatedCardRoute,
+  AuthenticatedReadLoanIdRoute: AuthenticatedReadLoanIdRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  TakenRoute: TakenRoute,
+  BookIdRoute: BookIdRoute,
+  DepartmentSlugRoute: DepartmentSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
