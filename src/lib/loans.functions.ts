@@ -41,6 +41,14 @@ export const takeOutBook = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     await expireStaleLoans(supabase, userId);
 
+    const { data: named } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!named?.display_name || named.display_name.trim().length < 2) throw new Error(NAME_REQUIRED);
+
+
     const { data: book, error: bookErr } = await supabase
       .from("books")
       .select("id, status, department")
