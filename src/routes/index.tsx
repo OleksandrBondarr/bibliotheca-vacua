@@ -66,7 +66,7 @@ function Hall() {
               params={{ slug: d.slug }}
               className="drawer group relative flex min-h-[92px] flex-col justify-between p-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <span className="inline-block w-fit border border-brass/60 bg-paper px-2 py-0.5 text-[13px] text-ink">
+              <span className="inline-block w-fit border border-brass/60 bg-paper px-2 py-0.5 text-[15px] text-ink">
                 {d.label}
               </span>
               <span className="flex items-end justify-between">

@@ -20,6 +20,13 @@
     serif;
   --font-sans: var(--font-serif);
 
+  /* Never render body text below 15px, even for "small" sizes. */
+  --text-xs: 0.9375rem;
+  --text-xs--line-height: 1.4;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.5;
+
+
   --radius-sm: 2px;
   --radius-md: 3px;
   --radius-lg: 4px;

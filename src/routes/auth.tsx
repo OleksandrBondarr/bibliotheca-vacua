@@ -84,7 +84,7 @@ function AuthPage() {
             {busy ? "Sending…" : "Send me a sign-in link"}
           </button>
           {error && <p className="text-sm text-destructive">{error}</p>}
-          <p className="text-[13px] leading-relaxed text-muted-foreground">
+          <p className="text-[15px] leading-relaxed text-muted-foreground">
             No password. We send a link; the link is your signature.
           </p>
         </form>

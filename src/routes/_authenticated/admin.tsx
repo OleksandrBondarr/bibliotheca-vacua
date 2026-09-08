@@ -121,7 +121,7 @@ function AdminPage() {
             <button type="button" disabled={busy} onClick={() => fillReviews.mutate()} className={buttonQuiet}>
               {fillReviews.isPending ? "Writing…" : "Write missing reviews"}
             </button>
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-[15px] text-muted-foreground">
               Each shelf takes a minute or two to catalogue and review. Keep this page open.
             </p>
           </div>
