@@ -8,6 +8,7 @@ import { departmentLabel } from "@/lib/departments";
 import { buttonLink } from "@/components/library/Frame";
 import { cn } from "@/lib/utils";
 import type { SpineBook } from "@/lib/catalogue.functions";
+import { Shelf } from "@/components/library/Shelf";
 
 function firstSentences(review: string | null, n = 2) {
   if (!review) return "";
@@ -46,6 +47,9 @@ export function HeldShelf({ heading = true, className }: { heading?: boolean; cl
       {heading && <h2 className="text-small-caps text-sm text-muted-foreground">Set aside for you</h2>}
       <p className="mt-2 italic text-muted-foreground">The librarian has set these aside for you.</p>
       {data.note && <p className="mt-2 max-w-prose text-sm text-muted-foreground">{data.note}</p>}
+      <div className="mt-5">
+        <Shelf books={data.books as SpineBook[]} privateBooks />
+      </div>
       <ul className="mt-5 space-y-4">
         {(data.books as SpineBook[]).map((b) => (
           <li key={b.id} className="border border-border bg-paper/5 p-4">

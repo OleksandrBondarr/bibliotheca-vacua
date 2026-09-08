@@ -1,7 +1,11 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import type { SpineBook } from "@/lib/catalogue.functions";
+import { getReaderCard } from "@/lib/loans.functions";
 import { useDragScroll } from "@/hooks/useDragScroll";
+import { useSession } from "@/hooks/useSession";
 import { cn } from "@/lib/utils";
 import { Spine } from "./Spine";
 
@@ -20,13 +24,26 @@ export function Shelf({
   empty,
   plaque,
   vitrine,
+  privateBooks = false,
 }: {
   books: SpineBook[];
   empty?: ReactNode;
   plaque?: ReactNode;
   vitrine?: boolean;
+  privateBooks?: boolean;
 }) {
   const scroller = useDragScroll<HTMLDivElement>();
+  const session = useSession();
+  const fetchCard = useServerFn(getReaderCard);
+  const { data: card } = useQuery({
+    queryKey: ["reader-card"],
+    queryFn: () => fetchCard(),
+    enabled: Boolean(session),
+    staleTime: 60_000,
+  });
+  const activeBookIds = new Set(
+    (card?.loans ?? []).filter((loan) => loan.status === "active").map((loan) => loan.book.id),
+  );
   return (
     <div>
       {plaque}
@@ -34,17 +51,19 @@ export function Shelf({
         <div
           ref={scroller}
           className={cn(
-            "shelf-scroll flex items-end gap-[3px] px-4 pt-3",
+            "shelf-scroll shelf-bed flex items-end gap-[3px] px-4 pt-3",
             books.length > 0 && "min-h-[208px]",
           )}
         >
           {books.length === 0 ? (
             <p className="pb-4 text-sm italic text-muted-foreground">{empty ?? "The shelf is empty."}</p>
           ) : (
-            books.map((b) => <Spine key={b.id} book={b} />)
+            books.map((b) => (
+              <Spine key={b.id} book={b} onLoan={activeBookIds.has(b.id)} setAside={privateBooks} />
+            ))
           )}
         </div>
-        <div className="plank h-3.5 rounded-b-sm" />
+        <div className="plank h-[18px] rounded-b-sm" />
       </div>
     </div>
   );

@@ -133,6 +133,61 @@ function Binding({ book, style, height }: { book: SpineBook; style: number; heig
   );
 }
 
+/** A publisher's blind-stamped geometric mark, repeated across its bindings. */
+function PublisherMark({ book }: { book: SpineBook }) {
+  const hash = houseHash(book);
+  const letter = (book.publisher?.name.trim().match(/[A-Za-z]/)?.[0] ?? "V").toUpperCase();
+  const shape = hash % 4;
+  const markColor = `color-mix(in oklch, ${book.spine_color}, var(--ink) 42%)`;
+
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "pointer-events-none absolute bottom-[34px] left-1/2 z-[2] flex h-[15px] w-[15px] -translate-x-1/2 items-center justify-center text-[8px] font-semibold leading-none opacity-80",
+        shape === 0 && "border",
+        shape === 1 && "rotate-45 border",
+        shape === 2 && "rounded-full border",
+        shape === 3 && "border-x border-y-2",
+      )}
+      style={{ color: markColor, borderColor: markColor }}
+    >
+      <span className={cn(shape === 1 && "-rotate-45")}>{letter}</span>
+    </span>
+  );
+}
+
+function PageBlock() {
+  return (
+    <span
+      aria-hidden
+      className="pointer-events-none absolute inset-x-[2px] top-0 z-[3] h-[6px] border-b border-ink/20 bg-paper"
+      style={{
+        backgroundImage:
+          "repeating-linear-gradient(to bottom, transparent 0 1px, color-mix(in oklch, var(--paper), var(--ink) 14%) 1px 2px), linear-gradient(to right, var(--paper-dark), var(--paper) 72%)",
+      }}
+    />
+  );
+}
+
+function Ribbon() {
+  return (
+    <span
+      aria-hidden
+      className="pointer-events-none absolute right-[6px] top-0 z-[5] h-7 w-[7px] bg-stamp shadow-[0_1px_1px_oklch(0_0_0/30%)] [clip-path:polygon(0_0,100%_0,100%_100%,50%_78%,0_100%)]"
+    />
+  );
+}
+
+function SetAsideSlip() {
+  return (
+    <span
+      aria-hidden
+      className="pointer-events-none absolute -left-[5px] top-5 z-[4] h-8 w-4 border border-ink/25 bg-paper shadow-[0_1px_2px_oklch(0_0_0/25%)] after:absolute after:right-0 after:top-0 after:border-b-[5px] after:border-l-[5px] after:border-b-paper-dark after:border-l-transparent"
+    />
+  );
+}
+
 
 /** Relative luminance of a hex spine colour, so ink can be chosen for contrast. */
 function luminance(hex: string | null) {
@@ -168,7 +223,7 @@ function reserve(style: number, height: number, slip: boolean) {
 }
 
 
-export function Spine({ book }: { book: SpineBook }) {
+export function Spine({ book, onLoan = false, setAside = false }: { book: SpineBook; onLoan?: boolean; setAside?: boolean }) {
   const isMobile = useIsMobile();
   const height = 132 + Math.round((book.pages / 420) * 76);
   const width = 40 + Math.min(12, Math.round((book.pages / 420) * 12));
@@ -176,7 +231,8 @@ export function Spine({ book }: { book: SpineBook }) {
   const style = houseHash(book) % 6;
   const pale = luminance(book.spine_color) > 0.45;
   const ink = pale ? "oklch(0.24 0.02 60)" : "oklch(0.93 0.015 85)";
-  const zone = reserve(style, height, book.shelf === "not_yet");
+  const reserved = reserve(style, height, book.shelf === "not_yet");
+  const zone = { top: reserved.top, bottom: Math.max(reserved.bottom, 54) };
   const bottom = zone.bottom + (taken ? 18 : 0);
   const ref = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -239,10 +295,13 @@ export function Spine({ book }: { book: SpineBook }) {
 
 
   const shell =
-    "relative flex shrink-0 items-start justify-center overflow-hidden rounded-[2px] outline-none transition-transform focus-visible:ring-2 focus-visible:ring-ring motion-safe:hover:-translate-y-1";
+    "relative mt-[6px] flex shrink-0 items-start justify-center overflow-hidden rounded-b-[2px] outline-none transition-transform focus-visible:ring-2 focus-visible:ring-ring motion-safe:hover:-translate-y-1";
 
   return (
     <div ref={ref} className="relative shrink-0" onMouseEnter={openHover} onMouseLeave={closeHover}>
+      <PageBlock />
+      {onLoan && <Ribbon />}
+      {setAside && <SetAsideSlip />}
       {isMobile ? (
         <button
           type="button"
@@ -252,10 +311,12 @@ export function Spine({ book }: { book: SpineBook }) {
           style={spineStyle}
         >
           {inner}
+          <PublisherMark book={book} />
         </button>
       ) : (
         <Link to="/book/$id" params={{ id: book.id }} aria-label={label} className={cn(shell, taken && "hatched")} style={spineStyle}>
           {inner}
+          <PublisherMark book={book} />
         </Link>
       )}
 

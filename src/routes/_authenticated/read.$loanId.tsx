@@ -23,6 +23,14 @@ function daysLeft(iso: string) {
   return Math.max(0, Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000));
 }
 
+function PageImprint({ reader, page, total }: { reader: string; page: number; total: number }) {
+  return (
+    <p className="mt-8 border-t border-border/70 pt-3 text-center text-[15px] text-muted-foreground">
+      Written for {reader} · p. {page} of {total} · Bibliotheca Vacua
+    </p>
+  );
+}
+
 function ReadingRoom() {
   const { loanId } = Route.useParams();
   const qc = useQueryClient();
@@ -117,7 +125,13 @@ function ReadingRoom() {
           <div className="h-px bg-foreground transition-[width]" style={{ width: `${progress}%` }} />
         </div>
 
-        <article key={loan.currentPage} className="animate-page-in pt-10">
+        <article
+          key={loan.currentPage}
+          className="reading-text animate-page-in pt-10"
+          onCopy={(event) => event.preventDefault()}
+          onContextMenu={(event) => event.preventDefault()}
+          onDragStart={(event) => event.preventDefault()}
+        >
           {loan.text === null ? (
             <p className="italic text-muted-foreground">
               The first page has not yet been written. Turn to it.
@@ -126,6 +140,7 @@ function ReadingRoom() {
             <Prose text={loan.text} dropCap={loan.currentPage === 1} className="text-[18px] leading-[1.7]" />
           )}
         </article>
+        {!atEnd && <PageImprint reader={loan.readerName} page={loan.currentPage} total={total} />}
 
         {turning.error && <p className="mt-6 text-center text-sm text-destructive">{turning.error.message}</p>}
 
@@ -221,6 +236,7 @@ function ReadingRoom() {
               </div>
               {gift && <p className="text-sm italic text-muted-foreground">Gifts will be possible soon.</p>}
             </div>
+            <PageImprint reader={loan.readerName} page={loan.currentPage} total={total} />
           </section>
         )}
       </div>
