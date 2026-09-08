@@ -71,10 +71,8 @@ function Binding({ style }: { style: number }) {
   if (style === 0)
     return (
       <span aria-hidden className="pointer-events-none absolute inset-0">
-        <span data-spine-decoration className="spine-gilt absolute inset-x-[3px] top-[8px] h-px" style={{ background: gilt }} />
-        <span data-spine-decoration className="spine-gilt absolute inset-x-[3px] top-[11px] h-px" style={{ background: gilt }} />
-        <span data-spine-decoration className="spine-gilt absolute inset-x-[3px] bottom-[30px] h-px" style={{ background: gilt }} />
-        <span data-spine-decoration className="spine-gilt absolute inset-x-[3px] bottom-[33px] h-px" style={{ background: gilt }} />
+        <span data-spine-decoration className="spine-gilt absolute inset-x-[3px] top-[4px] h-px" style={{ background: gilt }} />
+        <span data-spine-decoration className="spine-gilt absolute inset-x-[3px] top-[7px] h-px" style={{ background: gilt }} />
       </span>
     );
 
@@ -84,8 +82,8 @@ function Binding({ style }: { style: number }) {
   if (style === 2)
     return (
       <span aria-hidden className="pointer-events-none absolute inset-0">
+        <span data-spine-decoration className="spine-blind absolute inset-x-[4px] top-[4px] h-px" style={{ background: dark }} />
         <span data-spine-decoration className="spine-blind absolute inset-x-[4px] top-[7px] h-px" style={{ background: dark }} />
-        <span data-spine-decoration className="spine-blind absolute inset-x-[4px] top-[10px] h-px" style={{ background: dark }} />
       </span>
     );
 
@@ -93,7 +91,7 @@ function Binding({ style }: { style: number }) {
     return (
       <span aria-hidden className="pointer-events-none absolute inset-0">
         <span data-spine-decoration className="absolute inset-x-[4px] top-[7px] h-px" style={{ background: light }} />
-        <span data-spine-decoration className="absolute inset-x-[4px] top-[10px] h-px" style={{ background: light }} />
+        <span data-spine-decoration className="absolute inset-x-[4px] top-[7px] h-px" style={{ background: light }} />
       </span>
     );
 
@@ -197,8 +195,8 @@ export function Spine({ book, onLoan = false, setAside = false }: { book: SpineB
   const ink = pale ? "oklch(0.24 0.02 60)" : "oklch(0.93 0.015 85)";
   // The title owns the middle of the spine; decorations live only in the head
   // and foot zones, so nothing can ever run across the lettering.
-  const titleTop = 11;
-  const titleBottom = style === 0 ? 36 : 32;
+  const titleTop = 13;
+  const titleBottom = 32;
   const ref = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hover, setHover] = useState<{ left: number; top: number } | null>(null);
