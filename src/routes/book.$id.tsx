@@ -129,7 +129,7 @@ function BookPage() {
           <p className="mt-1 text-lg">{book.author}</p>
           <p className="mt-2 text-sm text-muted-foreground">
             {book.kind}
-            {book.publisher && <> · {book.publisher.name}, {book.publisher.city}</>} · {book.year} · {book.pages} pages
+            {book.publisher && <> · {book.publisher.name}, {book.publisher.city}</>} · {book.year} · {book.pages} pages · Shelf mark {book.shelf_mark}
           </p>
         </div>
       </header>
