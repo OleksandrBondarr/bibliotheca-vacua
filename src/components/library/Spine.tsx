@@ -249,7 +249,7 @@ export function Spine({ book, onLoan = false, setAside = false }: { book: SpineB
       const r = ref.current?.getBoundingClientRect();
       if (!r) return;
       const cardWidth = 288;
-      const cardHeight = 340;
+      const cardHeight = Math.min(460, window.innerHeight - 24);
       const roomOnRight = window.innerWidth - r.right;
       const left = roomOnRight >= cardWidth + 22
         ? r.right + 10
