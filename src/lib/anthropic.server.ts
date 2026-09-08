@@ -138,7 +138,10 @@ export type BookForPrompt = {
 };
 
 export async function generateReview(book: BookForPrompt, depth: "standard" | "deep" = "standard"): Promise<string> {
-  const system = `You are a senior critic writing for a serious literary review. You write about books that have long been published and argued over. Your tone is calm, exact, slightly ironic, never gushing. You never hint that a book is invented or fictional; it simply exists. You never mention real people, real critics, real institutions, or real books. No headings, no bullet points, no quotation of the book longer than a phrase. Plain paragraphs separated by blank lines.`;
+  const system =
+    book.department === "sciences"
+      ? `You are a reviewer for a learned scientific journal, writing the review notice of a monograph. Your tone is dry, precise and collegial, with the faintest professional impatience; you weigh method, evidence, tables and apparatus before style. You never hint that the book is invented; it simply exists in the literature. You never mention real people, real institutions, real journals or real books, and you never state anything a reader could take as a real medical, pharmacological or safety claim — the subject of the book is plainly impossible. No headings, no bullet points. Plain paragraphs separated by blank lines.`
+      : `You are a senior critic writing for a serious literary review. You write about books that have long been published and argued over. Your tone is calm, exact, slightly ironic, never gushing. You never hint that a book is invented or fictional; it simply exists. You never mention real people, real critics, real institutions, or real books. No headings, no bullet points, no quotation of the book longer than a phrase. Plain paragraphs separated by blank lines.`;
 
   const length =
     depth === "deep"
