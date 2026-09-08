@@ -145,7 +145,8 @@ export function Spine({ book }: { book: SpineBook }) {
             aria-label={book.title}
             className="fixed inset-x-0 bottom-0 z-50 max-h-[80vh] overflow-y-auto border-t border-rule motion-safe:animate-page-in"
           >
-            <CatalogueCard book={book} />
+            <CatalogueCard book={book} hideCue />
+
             <div className="bg-paper px-4 pb-5">
               <Link
                 to="/book/$id"
