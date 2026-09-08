@@ -95,6 +95,9 @@ export function Frame({
                 <Link to="/" className={item} onClick={() => setOpen(false)}>
                   Hall
                 </Link>
+                <Link to="/about" className={item} onClick={() => setOpen(false)}>
+                  About the library
+                </Link>
                 <Link to="/taken" className={item} onClick={() => setOpen(false)}>
                   Taken forever
                 </Link>
