@@ -5,131 +5,91 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Design system definition.
+ * Bibliotheca Vacua — design system.
  *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
- *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
- *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
+ * Two environments share one set of semantic tokens:
+ *   .paper  (default) — book pages, reading room, reader's card
+ *   .hall             — the dark green-black hall with wooden shelves
+ * Components only ever use semantic classes (bg-background, text-ink, ...);
+ * the environment class on the wrapper decides what they resolve to.
  */
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
+  --font-serif:
+    "Iowan Old Style", Palatino, "Palatino Linotype", "Book Antiqua", Georgia, "Times New Roman",
+    serif;
+  --font-sans: var(--font-serif);
+
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-ring-offset-background: var(--background);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-hall: var(--hall);
+  --color-hall-foreground: var(--hall-foreground);
+  --color-wood: var(--wood);
+  --color-wood-dark: var(--wood-dark);
+  --color-wood-light: var(--wood-light);
+  --color-brass: var(--brass);
+  --color-paper: var(--paper);
+  --color-paper-dark: var(--paper-dark);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-rule: var(--rule);
+  --color-stamp: var(--stamp);
+  --color-spine-ink: var(--spine-ink);
+
+  --shadow-drawer: inset 0 1px 0 oklch(1 0 0 / 6%), inset 0 -2px 0 oklch(0 0 0 / 35%);
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
+  --radius: 3px;
+
+  /* palette */
+  --hall: oklch(0.2 0.018 165); /* #161d1a */
+  --hall-foreground: oklch(0.88 0.02 85);
+  --wood: oklch(0.3 0.03 55); /* #3a2e25 */
+  --wood-dark: oklch(0.23 0.028 55);
+  --wood-light: oklch(0.38 0.035 58);
+  --brass: oklch(0.72 0.1 80);
+  --paper: oklch(0.92 0.018 85); /* #ece6d8 */
+  --paper-dark: oklch(0.86 0.02 82);
+  --ink: oklch(0.21 0.008 70); /* #1e1c19 */
+  --ink-soft: oklch(0.45 0.012 70);
+  --rule: oklch(0.72 0.02 80);
+  --stamp: oklch(0.48 0.13 25);
+  --spine-ink: oklch(0.9 0.02 85);
+
+  /* paper environment (default) */
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --muted-foreground: var(--ink-soft);
+  --border: var(--rule);
+  --primary: var(--ink);
+  --primary-foreground: var(--paper);
+  --accent: var(--paper-dark);
+  --destructive: var(--stamp);
+  --ring: var(--ink-soft);
 }
 
-.dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+.hall {
+  --background: var(--hall);
+  --foreground: var(--hall-foreground);
+  --muted-foreground: oklch(0.66 0.02 90);
+  --border: oklch(0.34 0.02 120);
+  --primary: var(--hall-foreground);
+  --primary-foreground: var(--hall);
+  --accent: var(--wood);
+  --ring: var(--brass);
 }
 
 @layer base {
@@ -137,8 +97,120 @@
     border-color: var(--color-border);
   }
 
+  html {
+    font-family: var(--font-serif);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-feature-settings: "onum", "pnum", "kern";
+  }
+
+  ::selection {
+    background: var(--color-accent);
+  }
+}
+
+@utility font-serif {
+  font-family: var(--font-serif);
+}
+
+/* First-letter drop cap for reviews and pages */
+@utility drop-cap {
+  &::first-letter {
+    float: left;
+    font-size: 3.4em;
+    line-height: 0.82;
+    padding-right: 0.08em;
+    padding-top: 0.06em;
+    font-weight: 500;
+  }
+}
+
+/* Hatched overlay for spines taken forever */
+@utility hatched {
+  position: relative;
+  filter: saturate(0.15) brightness(0.75);
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent 0 5px,
+      oklch(0 0 0 / 45%) 5px 7px
+    );
+    pointer-events: none;
+  }
+}
+
+/* Wooden plank under a shelf */
+@utility plank {
+  background: linear-gradient(
+    to bottom,
+    var(--color-wood-light),
+    var(--color-wood) 40%,
+    var(--color-wood-dark)
+  );
+  box-shadow: 0 6px 12px oklch(0 0 0 / 45%);
+}
+
+/* Card-catalogue drawer */
+@utility drawer {
+  background: linear-gradient(to bottom, var(--color-wood-light), var(--color-wood));
+  box-shadow: var(--shadow-drawer);
+}
+
+@utility rule-thin {
+  height: 1px;
+  background: var(--color-border);
+}
+
+@utility text-small-caps {
+  font-variant-caps: small-caps;
+  letter-spacing: 0.06em;
+}
+
+@utility vertical-text {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+/* Reader's card round stamp */
+@utility stamp {
+  border: 2px solid var(--color-stamp);
+  color: var(--color-stamp);
+  border-radius: 9999px;
+  transform: rotate(-8deg);
+  opacity: 0.85;
+  mix-blend-mode: multiply;
+}
+
+/* Page-turn fade */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@utility animate-page-in {
+  animation: page-in 380ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
