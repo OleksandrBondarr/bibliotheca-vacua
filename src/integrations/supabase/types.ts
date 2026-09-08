@@ -49,7 +49,7 @@ export type Database = {
           publisher_id?: string | null
           review?: string | null
           shelf?: string | null
-          shelf_mark: string
+          shelf_mark?: string
           spine_color?: string
           status?: Database["public"]["Enums"]["book_status"]
           title: string
