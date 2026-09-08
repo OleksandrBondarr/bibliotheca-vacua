@@ -363,14 +363,29 @@
 /* Glass vitrine around the special shelf */
 @utility vitrine {
   position: relative;
-  overflow: hidden;
-  border: 1px solid oklch(0.72 0.1 80 / 55%);
+  overflow: visible;
+  border: 6px solid transparent;
+  border-radius: 0;
   background:
-    linear-gradient(to bottom, oklch(0.72 0.1 80 / 5%), oklch(1 0 0 / 2%) 45%, transparent);
+    linear-gradient(to bottom, oklch(0.72 0.1 80 / 5%), oklch(1 0 0 / 2%) 45%, transparent) padding-box,
+    conic-gradient(
+      from 45deg,
+      oklch(0.56 0.075 78),
+      oklch(0.78 0.11 84) 12%,
+      oklch(0.62 0.09 78) 25%,
+      oklch(0.82 0.1 88) 38%,
+      oklch(0.59 0.08 76) 50%,
+      oklch(0.77 0.105 84) 62%,
+      oklch(0.58 0.078 76) 75%,
+      oklch(0.8 0.105 86) 88%,
+      oklch(0.56 0.075 78)
+    ) border-box;
   box-shadow:
-    inset 0 1px 0 oklch(1 0 0 / 10%),
+    inset 0 0 0 1px oklch(0.2 0.018 165 / 55%),
+    inset 0 0 10px oklch(0 0 0 / 42%),
+    0 0 0 1px oklch(0.3 0.05 72 / 80%),
     0 8px 24px oklch(0 0 0 / 30%);
-  contain: layout paint;
+  contain: layout;
 }
 
 @utility vitrine-glow-warm {
@@ -388,50 +403,43 @@
   }
 }
 
-@utility vitrine-banner {
+@utility vitrine-engraved-plaque {
   position: absolute !important;
-  z-index: 3 !important;
-  top: 54px;
-  left: 6px;
+  z-index: 4 !important;
+  top: 0;
+  left: 50%;
   display: flex;
-  width: 240px;
-  height: 36px;
+  width: min(270px, calc(100% - 32px));
+  min-height: 30px;
   align-items: center;
   justify-content: center;
-  padding: 4px 20px;
-  transform: rotate(-12deg);
-  transform-origin: left center;
+  gap: 9px;
+  padding: 5px 10px 4px;
+  transform: translate(-50%, -50%);
+  border: 1px solid color-mix(in oklch, var(--color-brass), var(--color-wood-dark) 38%);
+  border-radius: 4px;
+  color: color-mix(in oklch, var(--color-ink), var(--color-wood-dark) 25%);
+  background:
+    repeating-linear-gradient(90deg, transparent 0 2px, oklch(1 0 0 / 4%) 2px 3px),
+    linear-gradient(to bottom, oklch(0.84 0.11 88), var(--color-brass) 42%, oklch(0.61 0.085 76));
   font-size: 15px;
   line-height: 1;
   white-space: nowrap;
-  box-shadow: 0 2px 4px oklch(0 0 0 / 42%);
-  isolation: isolate;
+  text-shadow: 0 1px 0 oklch(0.91 0.08 90 / 65%);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 28%),
+    inset 0 -1px 1px oklch(0 0 0 / 24%),
+    0 2px 4px oklch(0 0 0 / 38%);
 
-  &::before,
-  &::after {
-    content: "";
-    position: absolute;
-    right: 0;
-    left: 0;
-    height: 1px;
-    background: repeating-linear-gradient(to right, currentColor 0 4px, transparent 4px 7px);
-    opacity: 0.8;
+  & > i {
+    width: 4px;
+    height: 4px;
+    flex: none;
+    border-radius: 9999px;
+    background: color-mix(in oklch, var(--color-brass), var(--color-ink) 48%);
+    box-shadow: 0 1px 0 oklch(1 0 0 / 34%);
   }
-  &::before { top: 4px; }
-  &::after { bottom: 4px; }
 }
-
-@utility vitrine-banner-paper-warm {
-  background-color: var(--color-paper);
-  background-image:
-    repeating-linear-gradient(0deg, transparent 0 3px, color-mix(in oklch, var(--color-paper), var(--color-brass) 5%) 3px 4px),
-    linear-gradient(100deg, var(--color-paper-dark), var(--color-paper) 48%, var(--color-paper-dark));
-}
-@utility vitrine-banner-stitch-red-thread {
-  &::before,
-  &::after { color: var(--color-stamp); }
-}
-@utility vitrine-banner-ink-dark { color: var(--color-ink); }
 
 @utility vitrine-label {
   width: 156px;

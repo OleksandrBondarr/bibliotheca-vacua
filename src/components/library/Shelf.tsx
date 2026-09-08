@@ -14,14 +14,9 @@ export type VitrineTheme = {
     heading: string;
     caption: string;
   };
-  banner: {
+  plaque: {
     enabled: boolean;
     text: string;
-    colors: {
-      paper: "warm";
-      stitch: "red-thread";
-      ink: "dark";
-    };
   };
   glowTint: "warm";
 };
@@ -68,20 +63,15 @@ export function Shelf({
       {plaque}
       <div
         className={cn(
-          vitrine && "vitrine rounded-sm pt-1",
+          vitrine && "vitrine pt-1",
           vitrineTheme?.glowTint === "warm" && "vitrine-glow-warm",
         )}
       >
-        {vitrineTheme?.banner.enabled && (
-          <span
-            className={cn(
-              "vitrine-banner text-small-caps",
-              vitrineTheme.banner.colors.paper === "warm" && "vitrine-banner-paper-warm",
-              vitrineTheme.banner.colors.stitch === "red-thread" && "vitrine-banner-stitch-red-thread",
-              vitrineTheme.banner.colors.ink === "dark" && "vitrine-banner-ink-dark",
-            )}
-          >
-            {vitrineTheme.banner.text}
+        {vitrineTheme?.plaque.enabled && (
+          <span className="vitrine-engraved-plaque text-small-caps">
+            <i aria-hidden />
+            <span>{vitrineTheme.plaque.text}</span>
+            <i aria-hidden />
           </span>
         )}
         <div
