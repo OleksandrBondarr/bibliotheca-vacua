@@ -391,15 +391,15 @@
 @utility vitrine-banner {
   position: absolute !important;
   z-index: 3 !important;
-  top: 27px;
-  left: -52px;
+  top: 39px;
+  left: 0;
   display: flex;
   width: 248px;
   height: 38px;
   align-items: center;
   justify-content: center;
   padding: 4px 20px;
-  transform: rotate(-35deg);
+  transform: rotate(-24deg);
   font-size: 15px;
   line-height: 1;
   white-space: nowrap;
