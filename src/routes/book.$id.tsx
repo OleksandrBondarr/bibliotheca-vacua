@@ -9,6 +9,7 @@ import { ShareLine } from "@/components/library/Share";
 import { takeOutBook } from "@/lib/loans.functions";
 import { departmentLabel, LOAN_DAYS } from "@/lib/departments";
 import { useSession } from "@/hooks/useSession";
+import { useTrackSignal } from "@/hooks/useTrackSignal";
 import { Frame, Prose, Rule, buttonPrimary, buttonQuiet } from "@/components/library/Frame";
 
 function firstTwoSentences(text: string | null | undefined) {
@@ -81,6 +82,7 @@ function BookPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [gift, setGift] = useState(false);
+  useTrackSignal("card_read", { bookId: id, department: book?.department ?? null });
 
   if (!book) return bookNotFound();
 

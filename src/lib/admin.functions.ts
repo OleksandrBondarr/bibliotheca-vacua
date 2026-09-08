@@ -180,7 +180,7 @@ export const fillMissingReviews = createServerFn({ method: "POST" })
     const { generateReview } = await import("./anthropic.server");
     const { data: books } = await supabase
       .from("books")
-      .select("id, title, author, kind, year, pages, department, featured, publisher:publishers(name, city, style_note)")
+      .select("id, title, author, kind, year, pages, department, shelf, featured, publisher:publishers(name, city, style_note)")
       .is("review", null)
       .limit(10);
     let written = 0;
@@ -197,3 +197,72 @@ export const fillMissingReviews = createServerFn({ method: "POST" })
     }
     return { written };
   });
+
+const firstSentence = (review: string | null) => {
+  if (!review) return "";
+  const m = review.trim().match(/[^.!?]+[.!?]/);
+  return (m?.[0] ?? review.slice(0, 120)).trim();
+};
+
+/**
+ * Rewrites reviews with the v2 catalogue-card prompt, ten at a time.
+ * The client walks the offset forward until `done` comes back true.
+ */
+export const rewriteReviewBatch = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ offset: z.number().int().min(0).default(0), count: z.number().int().min(1).max(10).default(10) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabase } = context;
+    const { generateReview } = await import("./anthropic.server");
+
+    const { count: total } = await supabase.from("books").select("id", { count: "exact", head: true });
+    const { data: books, error } = await supabase
+      .from("books")
+      .select("id, title, author, kind, year, pages, department, shelf, featured, publisher:publishers(name, city, style_note)")
+      .order("created_at", { ascending: true })
+      .range(data.offset, data.offset + data.count - 1);
+    if (error) throw new Error(error.message);
+
+    // Openings already in the catalogue, so no two cards begin the same way.
+    const { data: recent } = await supabase
+      .from("books")
+      .select("review")
+      .not("review", "is", null)
+      .order("created_at", { ascending: true })
+      .range(Math.max(0, data.offset - 12), Math.max(0, data.offset - 1));
+    const avoid = (recent ?? []).map((r) => firstSentence(r.review));
+
+    let written = 0;
+    const results = await Promise.all(
+      (books ?? []).map(async (b) => {
+        try {
+          const review = await generateReview(
+            {
+              ...b,
+              publisher: b.publisher as unknown as { name: string; city: string; style_note: string | null } | null,
+            },
+            b.featured ? "deep" : "standard",
+            avoid,
+          );
+          const { error: upErr } = await supabase.from("books").update({ review }).eq("id", b.id);
+          return upErr ? null : review;
+        } catch {
+          return null;
+        }
+      }),
+    );
+    written = results.filter(Boolean).length;
+
+    const nextOffset = data.offset + (books?.length ?? 0);
+    return {
+      written,
+      attempted: books?.length ?? 0,
+      nextOffset,
+      total: total ?? 0,
+      done: (books?.length ?? 0) < data.count || nextOffset >= (total ?? 0),
+    };
+  });
+

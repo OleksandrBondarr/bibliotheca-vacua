@@ -20,6 +20,7 @@ export type Database = {
           created_at: string
           department: Database["public"]["Enums"]["department"]
           featured: boolean
+          held_for_user_id: string | null
           id: string
           kept_at: string | null
           kept_by_name: string | null
@@ -38,6 +39,7 @@ export type Database = {
           created_at?: string
           department: Database["public"]["Enums"]["department"]
           featured?: boolean
+          held_for_user_id?: string | null
           id?: string
           kept_at?: string | null
           kept_by_name?: string | null
@@ -56,6 +58,7 @@ export type Database = {
           created_at?: string
           department?: Database["public"]["Enums"]["department"]
           featured?: boolean
+          held_for_user_id?: string | null
           id?: string
           kept_at?: string | null
           kept_by_name?: string | null
@@ -199,6 +202,68 @@ export type Database = {
           style_note?: string | null
         }
         Relationships: []
+      }
+      reader_shelf_state: {
+        Row: {
+          created_at: string
+          generated_at: string | null
+          note: string | null
+          signal_count: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          generated_at?: string | null
+          note?: string | null
+          signal_count?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          generated_at?: string | null
+          note?: string | null
+          signal_count?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reader_signals: {
+        Row: {
+          book_id: string | null
+          created_at: string
+          department: string | null
+          id: string
+          kind: string
+          user_id: string
+        }
+        Insert: {
+          book_id?: string | null
+          created_at?: string
+          department?: string | null
+          id?: string
+          kind: string
+          user_id: string
+        }
+        Update: {
+          book_id?: string | null
+          created_at?: string
+          department?: string | null
+          id?: string
+          kind?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reader_signals_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

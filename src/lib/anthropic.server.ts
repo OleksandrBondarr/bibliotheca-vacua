@@ -68,22 +68,26 @@ export type CatalogueEntry = {
   spine_color: string;
 };
 
+/** Forms readers respond to now; every department draws on these as well as its own manner. */
+const LIVING_FORMS = `Draw on the forms readers respond to now, alongside the rigorous-absurd constructions the library is known for: quiet novels of a single unremarkable life; autofiction that uses the self as material; books built out of documents, letters, inventories, ledgers and archives; slow speculative work without catastrophe; science braided with confession; books of short chapters and fragments; philosophy written as prose. At least half the shelf should belong to these quieter forms.`;
+
 const DEPARTMENT_BRIEFS: Record<string, string> = {
   novels:
-    "Novels with rigorous, absurd construction: a formal constraint or impossible premise pursued with total seriousness.",
+    "Novels: some with a formal constraint or impossible premise pursued with total seriousness; others quiet accounts of one unremarkable life, autofiction, or narratives assembled from documents and inventories.",
   poetry:
-    "Poetry collections: strict old forms applied to impossible or minute subjects; liturgical, taxonomic, or elegiac.",
+    "Poetry collections: strict old forms applied to impossible or minute subjects; liturgical, taxonomic, or elegiac; also fragmentary sequences and poems that read as archive entries.",
   treatises:
-    "Scholarly treatises and monographs on impossible subjects, argued with academic apparatus and no jokes.",
+    "Scholarly treatises and monographs on impossible subjects, argued with academic apparatus and no jokes; also philosophy written as plain prose, and arguments carried in short numbered chapters.",
   sciences:
     "Scientific monographs, conference proceedings, laboratory notebooks, tables of constants and field guides in physics, biology, mathematics, geology and chemistry, concerning phenomena, organisms, materials or quantities that cannot exist. Full scientific apparatus: methods, tables, footnotes, errata. HARD RULE: the subject must be plainly impossible. Never real diseases, real drugs, real medical, pharmacological, dietary or safety claims, and nothing a reader could mistake for real science or act upon.",
   memoirs:
-    "Memoirs by unlikely narrators or of unlikely occupations; plain, aggrieved, intimate.",
+    "Memoirs by unlikely narrators or of unlikely occupations; plain, aggrieved, intimate; also autofiction, letters, and lives told through the objects and papers they left.",
   reference:
-    "Reference works: dictionaries, gazetteers, concordances, tables of things that cannot be tabulated.",
+    "Reference works: dictionaries, gazetteers, concordances, inventories, tables of things that cannot be tabulated.",
   restricted:
     "Volumes the library holds but does not lend: sealed minutes, indices of indices, manuals whose instructions must not be followed.",
 };
+
 
 /** Briefs for the named shelves inside a department. */
 const SHELF_BRIEFS: Record<string, string> = {
@@ -106,6 +110,8 @@ export async function generateCatalogue(
 
   const user = `Department: ${department}.
 Brief: ${shelfBrief ?? DEPARTMENT_BRIEFS[department] ?? ""}
+${shelf === "not_yet" ? "" : `\n${LIVING_FORMS}\n`}
+
 
 Produce exactly ${count} books as a JSON array. Each element:
 {
@@ -152,18 +158,37 @@ export type BookForPrompt = {
   publisher?: { name: string; city: string; style_note: string | null } | null;
 };
 
-export async function generateReview(book: BookForPrompt, depth: "standard" | "deep" = "standard"): Promise<string> {
+/** The laws of the catalogue card: the reader must finish the review wanting the book. */
+const CARD_LAWS = `The laws of the catalogue card:
+1. FIRST SENTENCE: one concrete, strange, specific detail from inside the book. Never an evaluation, never "a novel about", never the author's name, never the word "book". Register to aim for: "The bookkeeper of a provincial theatre notices that the season's ticket sales equal the number of townspeople who died that year."
+2. Leave exactly ONE question the card raises and does not answer — one that only reading the book can settle. Do not answer it later in the review.
+3. Mention ONE famous passage by where it stands and what it does, without quoting it: "the ninth chapter, where he deduces a staircase from the way a maid carries a tray".
+4. Name ONE dispute among critics, plainly enough that the reader wants to take a side.
+5. Hide the ending: refer to it obliquely — never describe it, never say what happens, never call it a twist.
+6. Give the reader ONE idea to carry away: something they could apply to their own thinking or life. This is the library's purpose — to inspire, to teach thinking, to find the non-obvious, to say the unexplainable.
+7. VOICE: calm, exact, slightly ironic. No gushing, no superlatives, none of "brilliant", "masterpiece", "unforgettable", "tour de force", "haunting", "luminous". No headings, no bullets, no lists.
+8. Never hint that the book is invented, and never name real people, real critics, real institutions or real books.`;
+
+export async function generateReview(
+  book: BookForPrompt,
+  depth: "standard" | "deep" = "standard",
+  avoidOpenings: string[] = [],
+): Promise<string> {
+  const scienceRules = `HARD RULES for this department: never state anything a reader could take as a real medical, pharmacological, dietary or safety claim, and never name real scientists, real institutions or real journals.`;
+
   const system =
     book.department === "sciences" && book.shelf === "not_yet"
-      ? `You are a reviewer for a learned scientific journal in the year ${book.year}, writing the review notice of a book published that year. The work proposes a new field, instrument, framework or reinterpretation; you weigh its reasoning, its consequences and the controversy around it. Your tone is dry, precise, collegial and intellectually generous. You never hint that the book is invented; it simply exists in the literature of its decade. HARD RULES: discuss ideas, arguments, consequences and disputes only — never cite numeric results, datasets, measurements, dosages or efficacy figures, never touch real diseases, real drugs, or real medical or safety matters, and never name real scientists, real institutions or real journals. No headings, no bullet points. Plain paragraphs separated by blank lines.`
+      ? `You are a critic writing the review notice of a book for a learned journal in the year ${book.year}. The work proposes a new field, instrument, framework or reinterpretation; you weigh its reasoning, its consequences and the quarrel around it. Dry, precise, collegial, intellectually generous, faintly ironic. The book simply exists in the literature of its decade.\n\n${CARD_LAWS}\n\n${scienceRules} Discuss ideas, arguments, consequences and disputes only — never cite numeric results, datasets, measurements, dosages or efficacy figures.\n\nPlain paragraphs separated by blank lines.`
       : book.department === "sciences"
-        ? `You are a reviewer for a learned scientific journal, writing the review notice of a monograph. Your tone is dry, precise and collegial, with the faintest professional impatience; you weigh method, evidence, tables and apparatus before style. You never hint that the book is invented; it simply exists in the literature. You never mention real people, real institutions, real journals or real books, and you never state anything a reader could take as a real medical, pharmacological or safety claim — the subject of the book is plainly impossible. No headings, no bullet points. Plain paragraphs separated by blank lines.`
-        : `You are a senior critic writing for a serious literary review. You write about books that have long been published and argued over. Your tone is calm, exact, slightly ironic, never gushing. You never hint that a book is invented or fictional; it simply exists. You never mention real people, real critics, real institutions, or real books. No headings, no bullet points, no quotation of the book longer than a phrase. Plain paragraphs separated by blank lines.`;
+        ? `You are a critic writing the review notice of a monograph for a learned journal. Dry, precise, collegial, with the faintest professional impatience; you weigh method, apparatus and tables before style. The book simply exists in the literature.\n\n${CARD_LAWS}\n\n${scienceRules} The subject of the book is plainly impossible.\n\nPlain paragraphs separated by blank lines.`
+        : `You are a senior critic writing for a serious literary review, about a book long published and long argued over.\n\n${CARD_LAWS}\n\nPlain paragraphs separated by blank lines. No quotation from the book longer than a phrase.`;
 
   const length =
     depth === "deep"
-      ? "Four paragraphs, 400–480 words total. Go deeper than usual: the philosophical problem the book circles, how its form embodies that problem, the quarrel it has caused among readers, its finest passage and its fault."
-      : "Three or four paragraphs, 280–380 words total. Describe what the book does and how it is built, the argument it has provoked over the years, its best passage and its fault.";
+      ? "Four paragraphs, 400–480 words total. Take the room to circle the problem the book keeps returning to and how its form embodies that problem."
+      : "Three or four paragraphs, 280–380 words total.";
+
+  const avoid = avoidOpenings.filter(Boolean).slice(0, 12);
 
   const user = `Write the review for the library's catalogue card.
 
@@ -175,11 +200,13 @@ Publisher: ${book.publisher?.name ?? "unknown"}, ${book.publisher?.city ?? ""} (
 Year: ${book.year}
 Pages: ${book.pages}
 
-${length} Write as if every reader already knows the book. Output the paragraphs only.`;
-
+${length} Write as if every reader already knows the book. Obey all eight laws, in order of appearance where they apply.
+${avoid.length ? `\nOther cards in this batch open like this — your first sentence must not resemble any of them in shape or subject:\n${avoid.map((a) => `- ${a}`).join("\n")}\n` : ""}
+Output the paragraphs only.`;
 
   return askClaude(system, user, depth === "deep" ? 1600 : 1200);
 }
+
 
 /* ------------------------------------------------------------------ */
 /* The Lem-neighbourhood shelf                                         */
@@ -263,4 +290,60 @@ Write about 180 words. Output only the page text.`;
 
 function clamp(n: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, n));
+}
+
+/* ------------------------------------------------------------------ */
+/* Held for one reader                                                 */
+/* ------------------------------------------------------------------ */
+
+export type HeldShelf = { note: string; entries: (CatalogueEntry & { department: string })[] };
+
+/**
+ * Reads a reader's traces and sets three books aside for them:
+ * two sentences on what this reader is drawn to, then three catalogue entries.
+ */
+export async function generateHeldShelf(signalSummary: string, existingTitles: string[]): Promise<HeldShelf> {
+  const system = `You are the librarian of the Bibliotheca Vacua. You have watched one reader move through the shelves and you now set three books aside for them, as a good librarian does: not more of the same, but the next step — the non-obvious neighbour of what they like. You invent books that read like real entries in a real catalogue, never like jokes or marketing. Invented authors and publishers only; never real people, real presses or real books. Never mention that anything is invented, and never address the reader in the second person. Return strict JSON only.`;
+
+  const user = `What this reader has done, most recent first:
+${signalSummary || "(almost nothing yet)"}
+
+${LIVING_FORMS}
+
+Return a JSON object:
+{
+  "note": string (exactly two sentences, third person, calm and exact, on what this reader appears drawn to — departments, moods, forms — and what you are therefore setting aside),
+  "entries": array of exactly 3 objects:
+  {
+    "title": string,
+    "author": string (invented; vary nationalities),
+    "kind": string,
+    "department": one of "novels" | "poetry" | "treatises" | "sciences" | "memoirs" | "reference",
+    "publisher_name": string (invented small press),
+    "publisher_city": string,
+    "publisher_note": string (one sentence on the house's character and typography),
+    "year": integer between 1958 and 2071,
+    "pages": integer between 64 and 420,
+    "spine_color": hex colour, muted and bookish
+  }
+}
+Avoid these existing titles: ${existingTitles.slice(0, 40).join("; ") || "none"}.
+Output the JSON object and nothing else.`;
+
+  const text = await askClaude(system, user, 2500);
+  const raw = extractJson<{ note?: string; entries?: (CatalogueEntry & { department: string })[] }>(text);
+  const entries = (raw.entries ?? [])
+    .filter((e) => e && e.title && e.author)
+    .slice(0, 3)
+    .map((e) => ({
+      ...e,
+      department: ["novels", "poetry", "treatises", "sciences", "memoirs", "reference"].includes(e.department)
+        ? e.department
+        : "novels",
+      year: clamp(Math.round(Number(e.year) || 1990), 1958, 2071),
+      pages: clamp(Math.round(Number(e.pages) || 200), 64, 420),
+      spine_color: /^#[0-9a-f]{6}$/i.test(e.spine_color ?? "") ? e.spine_color : "#5a4a3a",
+      kind: e.kind || "Book",
+    }));
+  return { note: (raw.note ?? "").trim(), entries };
 }

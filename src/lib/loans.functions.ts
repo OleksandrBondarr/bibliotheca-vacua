@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { LOAN_DAYS, MAX_ACTIVE_LOANS, MAX_LOANS_PER_DAY } from "./departments";
+import { noteSignal } from "./reader.functions";
 
 const BOOK_JOIN = "book:books(id, title, author, kind, year, pages, department, shelf, review)";
 
@@ -78,6 +79,7 @@ export const takeOutBook = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
+    await noteSignal(supabase as never, userId, "taken", { department: book.department, bookId: book.id });
     return { loanId: loan.id, alreadyOnLoan: false };
   });
 
@@ -163,6 +165,10 @@ export const turnToPage = createServerFn({ method: "POST" })
       pages.push(text);
     }
 
+    if (target >= book.pages) {
+      await noteSignal(supabase as never, userId, "finished", { department: book.department, bookId: book.id });
+    }
+
     const { data: updated, error: upErr } = await supabase
       .from("loans")
       .update({ pages, current_page: target })
@@ -191,12 +197,22 @@ export const returnBook = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ loanId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    const { error } = await context.supabase
+    const { supabase, userId } = context;
+    const { data: before } = await supabase
+      .from("loans")
+      .select("current_page, book:books(id, department)")
+      .eq("id", data.loanId)
+      .maybeSingle();
+    const { error } = await supabase
       .from("loans")
       .update({ status: "returned", pages: [] })
       .eq("id", data.loanId)
       .eq("status", "active");
     if (error) throw new Error(error.message);
+    if (before && before.current_page < 5) {
+      const b = before.book as unknown as { id: string; department: string } | null;
+      await noteSignal(supabase as never, userId, "returned_early", { department: b?.department, bookId: b?.id });
+    }
     return { ok: true };
   });
 
@@ -208,12 +224,18 @@ export const requestKeep = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { data: loan } = await supabase.from("loans").select("id").eq("id", data.loanId).maybeSingle();
+    const { data: loan } = await supabase
+      .from("loans")
+      .select("id, book:books(id, department)")
+      .eq("id", data.loanId)
+      .maybeSingle();
     if (!loan) throw new Error("This loan is not on your card.");
     const { error } = await supabase
       .from("keep_requests")
       .insert({ user_id: userId, loan_id: data.loanId, email: data.email.trim().toLowerCase() });
     if (error) throw new Error(error.message);
+    const kb = loan.book as unknown as { id: string; department: string } | null;
+    await noteSignal(supabase as never, userId, "kept", { department: kb?.department, bookId: kb?.id });
     return { ok: true };
   });
 

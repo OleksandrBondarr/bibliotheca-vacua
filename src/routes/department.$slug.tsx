@@ -3,6 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { departmentQuery } from "@/lib/catalogue.functions";
 import { DEPARTMENTS, isDepartment } from "@/lib/departments";
 import { Frame } from "@/components/library/Frame";
+import { useTrackSignal } from "@/hooks/useTrackSignal";
 import { NamedShelves, ShelvesByPublisher } from "@/components/library/Shelf";
 import { SCIENCE_SHELVES } from "@/lib/shelves";
 
@@ -43,6 +44,7 @@ function DepartmentPage() {
   const { slug } = Route.useParams();
   const { data: books } = useSuspenseQuery(departmentQuery(slug));
   const dept = DEPARTMENTS.find((d) => d.slug === slug);
+  useTrackSignal("department_visit", { department: slug });
 
   return (
     <Frame env="hall">
