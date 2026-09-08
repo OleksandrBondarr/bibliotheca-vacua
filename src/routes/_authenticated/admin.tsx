@@ -53,16 +53,17 @@ function AdminPage() {
   });
 
   const addOne = useMutation({
-    mutationFn: async (department: string) => {
-      note(`Adding a shelf to ${department}…`);
-      return shelf({ data: { department, count: 14 } });
+    mutationFn: async (v: { department: string; shelf?: "impossible" | "not_yet" }) => {
+      note(`Adding a shelf to ${v.department}…`);
+      return shelf({ data: { department: v.department, count: 14, shelf: v.shelf } });
     },
     onSuccess: (r) => {
-      note(`${r.department}: ${r.added} books added.`);
+      note(`${r.department}${r.shelf ? ` (${r.shelf})` : ""}: ${r.added} books added.`);
       refresh();
     },
     onError: (e) => note(`Failed: ${e.message}`),
   });
+
 
   const addLem = useMutation({
     mutationFn: async () => {
@@ -102,7 +103,7 @@ function AdminPage() {
                   <td className="py-2">{d.label}</td>
                   <td className="py-2 text-right tabular-nums text-muted-foreground">{data[d.slug] ?? 0} books</td>
                   <td className="py-2 pl-4 text-right">
-                    <button type="button" disabled={busy} onClick={() => addOne.mutate(d.slug)} className="text-sm underline underline-offset-4 disabled:opacity-50">
+                    <button type="button" disabled={busy} onClick={() => addOne.mutate({ department: d.slug })} className="text-sm underline underline-offset-4 disabled:opacity-50">
                       add a shelf
                     </button>
                   </td>
@@ -118,6 +119,23 @@ function AdminPage() {
             <button type="button" disabled={busy} onClick={() => addLem.mutate()} className={buttonQuiet}>
               {addLem.isPending ? "Assembling…" : "Add the Lem-neighbourhood shelf"}
             </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => addOne.mutate({ department: "sciences", shelf: "impossible" })}
+              className={buttonQuiet}
+            >
+              Add impossible-sciences shelf
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => addOne.mutate({ department: "sciences", shelf: "not_yet" })}
+              className={buttonQuiet}
+            >
+              Add sciences-not-yet-made shelf
+            </button>
+
             <button type="button" disabled={busy} onClick={() => fillReviews.mutate()} className={buttonQuiet}>
               {fillReviews.isPending ? "Writing…" : "Write missing reviews"}
             </button>

@@ -32,20 +32,29 @@ export const getShelfCounts = createServerFn({ method: "GET" })
 export const addShelf = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({ department: z.string(), count: z.number().int().min(1).max(14).default(14) }).parse(input),
+    z
+      .object({
+        department: z.string(),
+        count: z.number().int().min(1).max(14).default(14),
+        shelf: z.enum(["impossible", "not_yet"]).optional(),
+      })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const department = data.department;
     if (!isDepartment(department)) throw new Error("No such department");
+    const shelf = department === "sciences" ? (data.shelf ?? "impossible") : null;
     const { supabase } = context;
     const { generateCatalogue, generateReview } = await import("./anthropic.server");
 
-    const { data: existing } = await supabase.from("books").select("title").eq("department", department);
+    const existingQuery = supabase.from("books").select("title").eq("department", department);
+    const { data: existing } = shelf ? await existingQuery.eq("shelf", shelf) : await existingQuery;
     const entries = await generateCatalogue(
       department,
       (existing ?? []).map((b) => b.title),
       data.count,
+      shelf ?? undefined,
     );
 
     // Publishers: reuse by name, create the rest.
@@ -73,6 +82,7 @@ export const addShelf = createServerFn({ method: "POST" })
           year: e.year,
           pages: e.pages,
           department: data.department,
+          shelf,
           publisher: { name: e.publisher_name, city: e.publisher_city, style_note: e.publisher_note },
         }).catch(() => null),
       ),
@@ -87,14 +97,16 @@ export const addShelf = createServerFn({ method: "POST" })
         year: e.year,
         pages: e.pages,
         department,
+        shelf,
         spine_color: e.spine_color,
         review: reviews[i] ?? null,
       })),
     );
     if (insertErr) throw new Error(insertErr.message);
 
-    return { added: entries.length, department: data.department };
+    return { added: entries.length, department: data.department, shelf };
   });
+
 
 /**
  * Adds the commemorative "In the neighbourhood of Lem" shelf: 14 featured books
