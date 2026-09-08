@@ -1,12 +1,13 @@
 import type { ReactNode } from "react";
 import type { SpineBook } from "@/lib/catalogue.functions";
+import { cn } from "@/lib/utils";
 import { Spine } from "./Spine";
 
 /** A wooden shelf holding a row of spines; scrolls sideways on a phone. */
 export function Shelf({ books, empty }: { books: SpineBook[]; empty?: ReactNode }) {
   return (
     <div>
-      <div className="flex min-h-[208px] items-end gap-[3px] overflow-x-auto px-4 pt-3 [scrollbar-width:thin]">
+      <div className={cn("flex items-end gap-[3px] overflow-x-auto px-4 pt-3 [scrollbar-width:thin]", books.length > 0 && "min-h-[208px]")}>
         {books.length === 0 ? (
           <p className="pb-4 text-sm italic text-muted-foreground">{empty ?? "The shelf is empty."}</p>
         ) : (
