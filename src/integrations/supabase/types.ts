@@ -19,7 +19,10 @@ export type Database = {
           author: string
           created_at: string
           department: Database["public"]["Enums"]["department"]
+          featured: boolean
           id: string
+          kept_at: string | null
+          kept_by_name: string | null
           kind: string
           pages: number
           publisher_id: string | null
@@ -33,7 +36,10 @@ export type Database = {
           author: string
           created_at?: string
           department: Database["public"]["Enums"]["department"]
+          featured?: boolean
           id?: string
+          kept_at?: string | null
+          kept_by_name?: string | null
           kind: string
           pages: number
           publisher_id?: string | null
@@ -47,7 +53,10 @@ export type Database = {
           author?: string
           created_at?: string
           department?: Database["public"]["Enums"]["department"]
+          featured?: boolean
           id?: string
+          kept_at?: string | null
+          kept_by_name?: string | null
           kind?: string
           pages?: number
           publisher_id?: string | null
@@ -63,6 +72,38 @@ export type Database = {
             columns: ["publisher_id"]
             isOneToOne: false
             referencedRelation: "publishers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      keep_requests: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          loan_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          loan_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          loan_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "keep_requests_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "loans"
             referencedColumns: ["id"]
           },
         ]
