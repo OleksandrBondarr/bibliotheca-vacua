@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { addLemShelf, addShelf, fillMissingReviews, getShelfCounts } from "@/lib/admin.functions";
+import { addLemShelf, addShelf, fillMissingReviews, getShelfCounts, rewriteReviewBatch } from "@/lib/admin.functions";
 import { DEPARTMENTS } from "@/lib/departments";
 import { Frame, Rule, buttonPrimary, buttonQuiet } from "@/components/library/Frame";
 
@@ -26,6 +26,7 @@ function AdminPage() {
   const shelf = useServerFn(addShelf);
   const lem = useServerFn(addLemShelf);
   const fill = useServerFn(fillMissingReviews);
+  const rewrite = useServerFn(rewriteReviewBatch);
   const [log, setLog] = useState<string[]>([]);
   const note = (s: string) => setLog((l) => [s, ...l].slice(0, 12));
 
@@ -86,7 +87,26 @@ function AdminPage() {
     onError: (e) => note(`Failed: ${e.message}`),
   });
 
-  const busy = seed.isPending || addOne.isPending || addLem.isPending || fillReviews.isPending;
+  const rewriteAll = useMutation({
+    mutationFn: async () => {
+      let offset = 0;
+      let written = 0;
+      note("Rewriting reviews with the new catalogue-card prompt…");
+      for (;;) {
+        const r = await rewrite({ data: { offset, count: 10 } });
+        written += r.written;
+        offset = r.nextOffset;
+        note(`Reviews rewritten: ${Math.min(offset, r.total)} of ${r.total}.`);
+        refresh();
+        if (r.done) return { written, total: r.total };
+      }
+    },
+    onSuccess: (r) => note(`Done: ${r.written} of ${r.total} reviews rewritten.`),
+    onError: (e) => note(`Failed: ${e.message}`),
+  });
+
+  const busy =
+    seed.isPending || addOne.isPending || addLem.isPending || fillReviews.isPending || rewriteAll.isPending;
 
   return (
     <Frame env="paper" narrow>
@@ -136,6 +156,9 @@ function AdminPage() {
               Add sciences-not-yet-made shelf
             </button>
 
+            <button type="button" disabled={busy} onClick={() => rewriteAll.mutate()} className={buttonQuiet}>
+              {rewriteAll.isPending ? "Rewriting reviews…" : "Rewrite all reviews (v2)"}
+            </button>
             <button type="button" disabled={busy} onClick={() => fillReviews.mutate()} className={buttonQuiet}>
               {fillReviews.isPending ? "Writing…" : "Write missing reviews"}
             </button>

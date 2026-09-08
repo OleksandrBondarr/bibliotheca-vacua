@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { getReaderCard } from "@/lib/loans.functions";
 import { Frame, Rule, buttonLink } from "@/components/library/Frame";
+import { HeldShelf } from "@/components/library/HeldShelf";
 
 export const Route = createFileRoute("/_authenticated/card")({
   head: () => ({
@@ -116,6 +117,7 @@ function CardPage() {
           )}
         </>
       )}
+      <HeldShelf />
     </Frame>
   );
 }

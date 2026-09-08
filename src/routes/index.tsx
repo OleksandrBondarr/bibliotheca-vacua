@@ -5,6 +5,7 @@ import { DEPARTMENTS } from "@/lib/departments";
 import { getRequestOrigin } from "@/lib/origin.functions";
 import { ogImage } from "@/lib/og-meta";
 import { Frame } from "@/components/library/Frame";
+import { HeldShelf } from "@/components/library/HeldShelf";
 import { DepartmentShelf, Shelf } from "@/components/library/Shelf";
 import { departmentLabel } from "@/lib/departments";
 
@@ -112,6 +113,7 @@ function Hall() {
         ))}
       </section>
       </div>
+      <HeldShelf />
     </Frame>
   );
 }
