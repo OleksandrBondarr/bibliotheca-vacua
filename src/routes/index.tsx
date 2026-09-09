@@ -120,9 +120,9 @@ function Hall() {
         </p>
       </section>
 
-      <section id="lem" aria-labelledby="lem" className="mb-14 scroll-mt-20">
+      <section id="lem" aria-labelledby="lem-heading" className="mb-14 scroll-mt-20">
         <div className="mb-3 px-1">
-          <h2 id="lem" className="text-xl">
+          <h2 id="lem-heading" className="text-xl">
             In the neighbourhood of Lem
           </h2>
           <p className="mt-1 text-sm italic text-muted-foreground">
