@@ -17,10 +17,20 @@ export const setDisplayName = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ name: displayNameSchema }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const { data: before } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("user_id", userId)
+      .maybeSingle();
     const { error } = await supabase
       .from("profiles")
       .update({ display_name: data.name })
       .eq("user_id", userId);
     if (error) throw new Error(error.message);
+    // A card counts as issued the moment the reader gives the library a name.
+    if (!before?.display_name?.trim()) {
+      const { noteChronicle } = await import("./chronicle.functions");
+      await noteChronicle(supabase as never, userId, "card_issued");
+    }
     return { display_name: data.name };
   });
