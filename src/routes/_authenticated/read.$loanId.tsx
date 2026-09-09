@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getLoan, requestKeep, returnBook, setBookmark, turnToPage, type LoanView } from "@/lib/loans.functions";
-import { Prose, buttonLink, buttonPrimary, buttonQuiet } from "@/components/library/Frame";
+import { Frame, Prose, buttonLink, buttonPrimary, buttonQuiet } from "@/components/library/Frame";
+import { ShareLine } from "@/components/library/Share";
 
 export const Route = createFileRoute("/_authenticated/read/$loanId")({
   head: () => ({
@@ -23,11 +24,30 @@ function daysLeft(iso: string) {
   return Math.max(0, Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000));
 }
 
-function PageImprint({ reader, page, total }: { reader: string; page: number; total: number }) {
+function PageImprint({ reader, page }: { reader: string; page: number }) {
   return (
     <p className="mt-8 border-t border-border/70 pt-3 text-center text-[15px] text-muted-foreground">
-      Written for {reader} · p. {page} of {total} · Bibliotheca Vacua
+      Written for {reader} · p. {page} · Bibliotheca Vacua
     </p>
+  );
+}
+
+/** The date stamp pressed onto a freshly issued book. */
+function IssueStamp() {
+  const [gone, setGone] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setGone(true), 2600);
+    return () => clearTimeout(t);
+  }, []);
+  if (gone) return null;
+  const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  return (
+    <div aria-hidden className="pointer-events-none relative h-0">
+      <div className="stamp stamp-press absolute right-2 -top-2 flex h-24 w-24 flex-col items-center justify-center text-center text-[10px] uppercase leading-tight tracking-wider">
+        <span>issued</span>
+        <span className="mt-1 text-xs font-medium">{today}</span>
+      </div>
+    </div>
   );
 }
 
@@ -40,6 +60,8 @@ function ReadingRoom() {
   const mark = useServerFn(setBookmark);
   const giveBack = useServerFn(returnBook);
   const keep = useServerFn(requestKeep);
+  const [origin, setOrigin] = useState("");
+  useEffect(() => setOrigin(window.location.origin), []);
 
   const key = ["loan", loanId];
   const { data: loan, isPending, error } = useQuery({
@@ -52,6 +74,8 @@ function ReadingRoom() {
     mutationFn: (page: number) => turn({ data: { loanId, page } }),
     onSuccess: (next) => {
       qc.setQueryData<LoanView>(key, next);
+      // The card shows the same page number; keep the two in step.
+      qc.invalidateQueries({ queryKey: ["reader-card"] });
       window.scrollTo({ top: 0 });
     },
   });
@@ -74,34 +98,34 @@ function ReadingRoom() {
 
   if (isPending) {
     return (
-      <div className="paper min-h-screen bg-background text-foreground">
-        <p className="pt-32 text-center italic text-muted-foreground">Opening the book…</p>
-      </div>
+      <Frame env="paper" narrow>
+        <p className="pt-24 text-center italic text-muted-foreground">Opening the book…</p>
+      </Frame>
     );
   }
   if (error || !loan) {
     return (
-      <div className="paper min-h-screen bg-background px-5 text-foreground">
-        <p className="pt-32 text-center italic text-muted-foreground">{error?.message ?? "This loan is not on your card."}</p>
+      <Frame env="paper" narrow>
+        <p className="pt-24 text-center italic text-muted-foreground">{error?.message ?? "This loan is not on your card."}</p>
         <p className="mt-6 text-center">
           <Link to="/card" className={buttonLink}>
             Back to your card
           </Link>
         </p>
-      </div>
+      </Frame>
     );
   }
 
   if (loan.status !== "active") {
     return (
-      <div className="paper min-h-screen bg-background px-5 text-foreground">
-        <p className="pt-32 text-center italic">This loan has ended. The book has returned to the shelf and its pages are gone.</p>
+      <Frame env="paper" narrow>
+        <p className="pt-24 text-center italic">This loan has ended. The book has returned to the shelf and its pages are gone.</p>
         <p className="mt-6 text-center">
           <Link to="/card" className={buttonLink}>
             Back to your card
           </Link>
         </p>
-      </div>
+      </Frame>
     );
   }
 
@@ -111,19 +135,21 @@ function ReadingRoom() {
   const progress = (loan.currentPage / total) * 100;
   const isBookmarked = loan.bookmarkPage === loan.currentPage;
   const busy = turning.isPending;
+  const cardUrl = origin ? `${origin}/book/${loan.book.id}` : "";
 
   return (
-    <div className="paper min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-[560px] px-5 pb-24">
-        <header className="flex items-baseline justify-between gap-4 pt-6 text-sm text-muted-foreground">
-          <Link to="/card" className="min-w-0 truncate hover:text-foreground">
+    <Frame env="paper" narrow>
+      <div className="pb-16">
+        <div className="flex items-baseline justify-between gap-4 pt-4 text-sm text-muted-foreground">
+          <Link to="/book/$id" params={{ id: loan.book.id }} className="min-w-0 truncate hover:text-foreground">
             {loan.book.title}
           </Link>
           <span className="shrink-0">returns in {days} {days === 1 ? "day" : "days"}</span>
-        </header>
+        </div>
         <div className="mt-3 h-px w-full bg-border">
           <div className="h-px bg-foreground transition-[width]" style={{ width: `${progress}%` }} />
         </div>
+        {loan.writtenPages <= 1 && <IssueStamp />}
 
         <article
           key={loan.currentPage}
@@ -133,14 +159,12 @@ function ReadingRoom() {
           onDragStart={(event) => event.preventDefault()}
         >
           {loan.text === null ? (
-            <p className="italic text-muted-foreground">
-              The first page has not yet been written. Turn to it.
-            </p>
+            <p className="italic text-muted-foreground">The first page has not yet been written. Turn to it.</p>
           ) : (
             <Prose text={loan.text} dropCap={loan.currentPage === 1} className="text-[18px] leading-[1.7]" />
           )}
         </article>
-        {!atEnd && <PageImprint reader={loan.readerName} page={loan.currentPage} total={total} />}
+        {!atEnd && <PageImprint reader={loan.readerName} page={loan.currentPage} />}
 
         {turning.error && <p className="mt-6 text-center text-sm text-destructive">{turning.error.message}</p>}
 
@@ -166,9 +190,7 @@ function ReadingRoom() {
           >
             previous
           </button>
-          <span className="tabular-nums">
-            p. {loan.currentPage} of {total}
-          </span>
+          <span className="tabular-nums">p. {loan.currentPage}</span>
           <span className="flex gap-3">
             {loan.bookmarkPage && !isBookmarked && loan.bookmarkPage <= loan.writtenPages && (
               <button type="button" disabled={busy} onClick={() => turning.mutate(loan.bookmarkPage!)} className={buttonLink}>
@@ -185,6 +207,17 @@ function ReadingRoom() {
             </button>
           </span>
         </footer>
+
+        <div className="mt-8 flex flex-col gap-3 border-t border-border/70 pt-5 sm:flex-row sm:items-center sm:justify-between">
+          <button type="button" disabled={returning.isPending} onClick={() => returning.mutate()} className={buttonQuiet}>
+            {returning.isPending ? "Returning…" : "Return to the shelf"}
+          </button>
+          {returning.error && <p className="text-sm text-destructive">{returning.error.message}</p>}
+        </div>
+
+        {cardUrl && (
+          <ShareLine url={cardUrl} title={`${loan.book.title} — ${loan.book.author}`} />
+        )}
 
         {atEnd && (
           <section className="mt-16 border-2 border-double border-foreground/70 p-6 text-center">
@@ -236,10 +269,11 @@ function ReadingRoom() {
               </div>
               {gift && <p className="text-sm italic text-muted-foreground">Gifts will be possible soon.</p>}
             </div>
-            <PageImprint reader={loan.readerName} page={loan.currentPage} total={total} />
+            {cardUrl && <ShareLine url={cardUrl} title={`I read it and let it go: ${loan.book.title} — ${loan.book.author}`} />}
+            <PageImprint reader={loan.readerName} page={loan.currentPage} />
           </section>
         )}
       </div>
-    </div>
+    </Frame>
   );
 }
