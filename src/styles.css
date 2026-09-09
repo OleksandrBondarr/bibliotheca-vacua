@@ -552,3 +552,168 @@
     transition-property: filter;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* A shelf is only as wide as the books standing on it.                */
+/* ------------------------------------------------------------------ */
+@utility shelf-fit {
+  width: fit-content;
+  max-width: 100%;
+  min-width: 180px;
+}
+
+/* Room and label breathing space inside the commemorative vitrine */
+@utility vitrine-label {
+  margin-right: 26px;
+}
+
+/* ------------------------------------------------------------------ */
+/* After closing: the reading lamp is the only light left.             */
+/* ------------------------------------------------------------------ */
+.hall-closed {
+  --hall: oklch(0.11 0.012 165);
+  --muted-foreground: oklch(0.5 0.015 90);
+}
+.hall-closed .shelf-case,
+.hall-closed .catalogue-cabinet {
+  filter: brightness(0.42) saturate(0.7);
+  transition: filter 700ms ease;
+}
+.hall-closed .vitrine {
+  filter: none;
+}
+.hall-closed .shelf-case:has(.vitrine) {
+  filter: none;
+}
+
+/* A small brass reading lamp with a pull switch */
+.reading-lamp {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.reading-lamp .shade {
+  width: 46px;
+  height: 22px;
+  border-radius: 3px 3px 22px 22px;
+  background: linear-gradient(to bottom, oklch(0.78 0.11 84), var(--color-brass) 55%, oklch(0.55 0.07 74));
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 30%), 0 2px 5px oklch(0 0 0 / 45%);
+}
+.reading-lamp .stem {
+  width: 2px;
+  height: 26px;
+  background: linear-gradient(to bottom, var(--color-brass), oklch(0.45 0.05 74));
+}
+.reading-lamp .foot {
+  width: 30px;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to bottom, var(--color-brass), oklch(0.4 0.045 74));
+}
+.reading-lamp .pull {
+  position: absolute;
+  right: 6px;
+  top: 24px;
+  width: 1px;
+  height: 20px;
+  background: oklch(0.72 0.1 80 / 70%);
+}
+.reading-lamp .pull::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: -2px;
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: var(--color-brass);
+}
+.reading-lamp .pool {
+  position: absolute;
+  right: -40px;
+  bottom: -30px;
+  width: 200px;
+  height: 150px;
+  pointer-events: none;
+  background: radial-gradient(60% 60% at 62% 30%, oklch(0.8 0.11 82 / 18%), transparent 72%);
+  opacity: 0;
+  transition: opacity 600ms ease;
+}
+.hall-closed .reading-lamp .pool {
+  opacity: 1;
+}
+
+/* Night shift: the hall sits a shade darker between 23:00 and 05:00 */
+.hall-night {
+  --hall: oklch(0.17 0.016 165);
+}
+
+/* Fine dust in the lamp light above the headline */
+.dust {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+.dust span {
+  position: absolute;
+  inset: -20% -10%;
+  background-image:
+    radial-gradient(oklch(1 0.02 85 / 55%) 0.7px, transparent 1px),
+    radial-gradient(oklch(1 0.02 85 / 35%) 0.6px, transparent 1px);
+  background-size: 130px 110px, 190px 170px;
+  background-position: 0 0, 60px 40px;
+  opacity: 0.16;
+  animation: dust-drift 46s linear infinite alternate;
+  will-change: transform;
+}
+.dust span:nth-child(2) {
+  animation-duration: 71s;
+  animation-direction: alternate-reverse;
+  opacity: 0.1;
+}
+@keyframes dust-drift {
+  from {
+    transform: translate3d(-14px, 8px, 0);
+  }
+  to {
+    transform: translate3d(18px, -12px, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dust span {
+    animation: none;
+  }
+}
+
+/* The date stamp pressed onto a book as it is issued */
+@keyframes stamp-press {
+  0% {
+    opacity: 0;
+    transform: rotate(-14deg) scale(2.1);
+  }
+  55% {
+    opacity: 1;
+    transform: rotate(-7deg) scale(0.96);
+  }
+  70% {
+    transform: rotate(-8deg) scale(1.04);
+  }
+  100% {
+    opacity: 0.85;
+    transform: rotate(-8deg) scale(1);
+  }
+}
+.stamp-press {
+  animation: stamp-press 900ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
