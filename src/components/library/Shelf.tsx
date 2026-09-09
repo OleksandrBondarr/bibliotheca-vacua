@@ -59,7 +59,7 @@ export function Shelf({
     (card?.loans ?? []).filter((loan) => loan.status === "active").map((loan) => loan.book.id),
   );
   return (
-    <div className="shelf-case">
+    <div className="shelf-case shelf-fit">
       {plaque}
       <div
         className={cn(
@@ -136,7 +136,7 @@ export function DepartmentShelf({
 }
 
 /** Rows of shelves for a department: wraps spines into rows of a fixed count. */
-export function Shelves({ books, perRow = 12 }: { books: SpineBook[]; perRow?: number }) {
+export function Shelves({ books, perRow = 14 }: { books: SpineBook[]; perRow?: number }) {
   if (books.length === 0) return <Shelf books={[]} />;
   const rows: SpineBook[][] = [];
   for (let i = 0; i < books.length; i += perRow) rows.push(books.slice(i, i + perRow));
@@ -144,38 +144,6 @@ export function Shelves({ books, perRow = 12 }: { books: SpineBook[]; perRow?: n
     <div className="space-y-8">
       {rows.map((row, i) => (
         <Shelf key={i} books={row} />
-      ))}
-    </div>
-  );
-}
-
-/** Department page: one shelf per publisher, plaque naming the house and its manner. */
-export function ShelvesByPublisher({ books }: { books: SpineBook[] }) {
-  if (books.length === 0) return <Shelf books={[]} />;
-  const groups = new Map<string, { publisher: SpineBook["publisher"]; books: SpineBook[] }>();
-  for (const b of books) {
-    const key = b.publisher?.name ?? "—";
-    const g = groups.get(key) ?? { publisher: b.publisher, books: [] };
-    g.books.push(b);
-    groups.set(key, g);
-  }
-  return (
-    <div className="space-y-8">
-      {[...groups.entries()].map(([key, g]) => (
-        <Shelf
-          key={key}
-          books={g.books}
-          plaque={
-            <Plaque>
-              <span className="text-small-caps text-sm">
-                {g.publisher ? `${g.publisher.name}, ${g.publisher.city}` : "Without an imprint"}
-              </span>
-              {g.publisher?.style_note && (
-                <span className="text-[15px] italic text-hall-foreground/75">{g.publisher.style_note}</span>
-              )}
-            </Plaque>
-          }
-        />
       ))}
     </div>
   );
