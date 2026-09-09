@@ -352,12 +352,23 @@
     background-image: radial-gradient(oklch(1 0 0) 0.4px, transparent 0.5px);
     background-size: 5px 5px;
   }
-  & > header,
   & > main,
   & > footer {
     position: relative;
     z-index: 1;
   }
+  /* The header (and the menu inside it) must always stand above the room. */
+  & > header {
+    position: relative;
+    z-index: 40;
+  }
+}
+
+/* The menu is a solid panel: nothing on the page may show through it. */
+.menu-panel {
+  background-color: var(--hall);
+  background-image: linear-gradient(to bottom, oklch(1 0 0 / 3%), transparent 30%);
+  opacity: 1;
 }
 
 /* Glass vitrine around the special shelf */
