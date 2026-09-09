@@ -106,6 +106,41 @@ export type Database = {
           },
         ]
       }
+      chronicle_events: {
+        Row: {
+          book_id: string | null
+          book_title: string | null
+          created_at: string
+          id: string
+          kind: string
+          reader_name: string
+        }
+        Insert: {
+          book_id?: string | null
+          book_title?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          reader_name?: string
+        }
+        Update: {
+          book_id?: string | null
+          book_title?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          reader_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chronicle_events_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       keep_requests: {
         Row: {
           created_at: string
@@ -185,18 +220,21 @@ export type Database = {
       profiles: {
         Row: {
           card_number: string
+          chronicle_opt_out: boolean
           display_name: string | null
           issued_at: string
           user_id: string
         }
         Insert: {
           card_number: string
+          chronicle_opt_out?: boolean
           display_name?: string | null
           issued_at?: string
           user_id: string
         }
         Update: {
           card_number?: string
+          chronicle_opt_out?: boolean
           display_name?: string | null
           issued_at?: string
           user_id?: string
