@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { getReaderCard } from "@/lib/loans.functions";
+import { getReaderCard, returnBook } from "@/lib/loans.functions";
+import { setChronicleOptOut } from "@/lib/chronicle.functions";
 import { Frame, Rule, buttonLink } from "@/components/library/Frame";
 import { HeldShelf } from "@/components/library/HeldShelf";
 import { setDisplayName, displayNameSchema } from "@/lib/profile.functions";
@@ -86,6 +87,45 @@ function NameField({ current, prompt }: { current: string | null; prompt: boolea
   );
 }
 
+/** Sends a book back to the shelf from the card. */
+function ReturnButton({ loanId }: { loanId: string }) {
+  const giveBack = useServerFn(returnBook);
+  const qc = useQueryClient();
+  const m = useMutation({
+    mutationFn: () => giveBack({ data: { loanId } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["reader-card"] }),
+  });
+  return (
+    <button type="button" disabled={m.isPending} onClick={() => m.mutate()} className={buttonLink}>
+      {m.isPending ? "returning…" : "return to the shelf"}
+    </button>
+  );
+}
+
+/** The reader may ask not to be named in the Chronicle. */
+function ChronicleOptOut({ optedOut }: { optedOut: boolean }) {
+  const save = useServerFn(setChronicleOptOut);
+  const qc = useQueryClient();
+  const m = useMutation({
+    mutationFn: (value: boolean) => save({ data: { optOut: value } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["reader-card"] }),
+  });
+  return (
+    <label className="mt-8 flex items-start gap-3 border border-border p-5 text-[15px] leading-relaxed">
+      <input
+        type="checkbox"
+        checked={optedOut}
+        disabled={m.isPending}
+        onChange={(e) => m.mutate(e.target.checked)}
+        className="mt-1 h-4 w-4 shrink-0"
+      />
+      <span>
+        Do not enter me in the Chronicle. Your entries will read simply “A reader”.
+      </span>
+    </label>
+  );
+}
+
 function CardPage() {
   const fetchCard = useServerFn(getReaderCard);
   const { data, isPending, error } = useQuery({ queryKey: ["reader-card"], queryFn: () => fetchCard() });
@@ -129,6 +169,8 @@ function CardPage() {
 
           <NameField current={data.profile?.display_name ?? null} prompt={Boolean(namePrompt)} />
 
+          <ChronicleOptOut optedOut={Boolean(data.profile?.chronicle_opt_out)} />
+
           <div className="mt-4 flex justify-between text-sm">
             {data.isAdmin ? (
               <Link to="/admin" className={buttonLink}>
@@ -144,6 +186,11 @@ function CardPage() {
 
           <h2 className="mt-12 text-small-caps text-sm text-muted-foreground">Loans</h2>
           <Rule className="my-3" />
+          {data.loans.filter((l) => l.status === "active").length >= 3 && (
+            <p className="mb-3 text-[15px] italic leading-relaxed text-muted-foreground">
+              You have three books on loan. Return one on your card to take another.
+            </p>
+          )}
           {data.loans.length === 0 ? (
             <p className="italic text-muted-foreground">Nothing has been taken out yet.</p>
           ) : (
@@ -168,6 +215,9 @@ function CardPage() {
                         <div>on loan</div>
                         <div className="text-muted-foreground">
                           p. {l.current_page} · {daysLeft(l.ends_at)} d left
+                        </div>
+                        <div className="mt-1">
+                          <ReturnButton loanId={l.id} />
                         </div>
                       </>
                     )}

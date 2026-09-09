@@ -7,9 +7,24 @@ import { DEPARTMENTS } from "@/lib/departments";
 import { getReaderCard } from "@/lib/loans.functions";
 import { supabase } from "@/integrations/supabase/client";
 
+/** True between 23:00 and 05:00 by the visitor's own clock. Client-side only. */
+export function useNightShift() {
+  const [night, setNight] = useState(false);
+  useEffect(() => {
+    const check = () => {
+      const h = new Date().getHours();
+      setNight(h >= 23 || h < 5);
+    };
+    check();
+    const id = setInterval(check, 5 * 60_000);
+    return () => clearInterval(id);
+  }, []);
+  return night;
+}
+
 /**
- * Page frame: a quiet header with the library's name and two links,
- * in either the hall (dark) or paper environment.
+ * Page frame: a quiet header with the library's name, the reader's card and the
+ * menu, in either the hall (dark) or paper environment.
  */
 export function Frame({
   env,
@@ -24,6 +39,7 @@ export function Frame({
 }) {
   const session = useSession();
   const [open, setOpen] = useState(false);
+  const night = useNightShift();
 
   const { data: card } = useQuery({
     queryKey: ["reader-card", session?.user.id ?? null],
@@ -41,9 +57,16 @@ export function Frame({
 
   const item =
     "block py-3 text-[17px] text-hall-foreground/75 hover:text-hall-foreground sm:py-2 sm:text-base";
+  const readerName = card?.profile?.display_name?.trim() || null;
 
   return (
-    <div className={cn(env === "hall" ? "hall hall-light" : "paper", "min-h-screen overflow-x-hidden bg-background text-foreground")}>
+    <div
+      className={cn(
+        env === "hall" ? "hall hall-light" : "paper",
+        env === "hall" && night && "hall-night",
+        "min-h-screen overflow-x-hidden bg-background text-foreground",
+      )}
+    >
       <svg aria-hidden className="absolute h-0 w-0 overflow-hidden">
         <defs>
           <filter id="cloth-grain" x="0" y="0" width="100%" height="100%">
@@ -60,19 +83,28 @@ export function Frame({
           </filter>
         </defs>
       </svg>
-      <header className={cn("relative z-40 mx-auto px-5 pt-5 pb-2", narrow ? "max-w-[560px]" : "max-w-5xl")}>
+      <header className={cn("relative z-50 mx-auto px-5 pt-5 pb-2", narrow ? "max-w-[560px]" : "max-w-5xl")}>
         <div className="flex items-baseline justify-between gap-4">
           <Link to="/" className="text-small-caps min-w-0 truncate text-sm tracking-widest text-muted-foreground hover:text-foreground">
             Bibliotheca Vacua
+            {env === "hall" && night && <span className="ml-2 italic tracking-normal">· Night shift</span>}
           </Link>
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            aria-expanded={open}
-            className="text-small-caps shrink-0 py-1 text-sm tracking-widest text-muted-foreground hover:text-foreground"
-          >
-            {open ? "Close" : "Menu"}
-          </button>
+          <div className="flex shrink-0 items-baseline gap-4">
+            <Link
+              to={session ? "/card" : "/auth"}
+              className="text-small-caps max-w-[9rem] truncate text-sm tracking-widest text-muted-foreground hover:text-foreground"
+            >
+              {readerName ?? "Reader's card"}
+            </Link>
+            <button
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              aria-expanded={open}
+              className="text-small-caps shrink-0 py-1 text-sm tracking-widest text-muted-foreground hover:text-foreground"
+            >
+              {open ? "Close" : "Menu"}
+            </button>
+          </div>
         </div>
 
         {open ? (
@@ -84,7 +116,7 @@ export function Frame({
             />
             <nav
               className={cn(
-                "fixed inset-0 z-50 overflow-y-auto border border-[oklch(0.34_0.02_120)] bg-hall px-5 pb-10 pt-5 text-hall-foreground shadow-[0_10px_30px_oklch(0_0_0/50%)]",
+                "menu-panel fixed inset-0 z-[60] overflow-y-auto border border-[oklch(0.34_0.02_120)] px-5 pb-10 pt-5 text-hall-foreground shadow-[0_10px_30px_oklch(0_0_0/60%)]",
                 "sm:absolute sm:inset-auto sm:right-5 sm:top-full sm:w-[320px] sm:max-w-[320px] sm:rounded-sm sm:px-5 sm:py-4",
               )}
             >
@@ -111,8 +143,14 @@ export function Frame({
                 <Link to="/" className={item} onClick={() => setOpen(false)}>
                   Hall
                 </Link>
+                <Link to="/" hash="lem" className={item} onClick={() => setOpen(false)}>
+                  The Lem shelf
+                </Link>
                 <Link to="/about" className={item} onClick={() => setOpen(false)}>
                   About the library
+                </Link>
+                <Link to="/chronicle" className={item} onClick={() => setOpen(false)}>
+                  The Chronicle
                 </Link>
                 <Link to="/taken" className={item} onClick={() => setOpen(false)}>
                   Taken forever
@@ -150,6 +188,10 @@ export function Frame({
             About the library
           </Link>
           {" · "}
+          <Link to="/chronicle" className="hover:text-foreground">
+            The Chronicle
+          </Link>
+          {" · "}
           <Link to="/taken" className="hover:text-foreground">
             Taken forever
           </Link>
@@ -158,6 +200,7 @@ export function Frame({
             Reader's card
           </Link>
         </p>
+        <p className="mt-2 text-sm italic text-muted-foreground">The reading room is open at all hours.</p>
       </footer>
     </div>
   );

@@ -1,9 +1,11 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { z } from "zod";
 import { bookQuery } from "@/lib/catalogue.functions";
+import { getPrivateBook } from "@/lib/reader.functions";
+import { readingHint } from "@/lib/reading-time";
 import { getRequestOrigin } from "@/lib/origin.functions";
 import { ShareLine } from "@/components/library/Share";
 import { ReviewEnd } from "@/components/library/ReviewEnd";
@@ -36,14 +38,14 @@ export const Route = createFileRoute("/book/$id")({
       context.queryClient.ensureQueryData(bookQuery(params.id)),
       getRequestOrigin(),
     ]);
-    if (!book) throw notFound();
-    return { ...book, origin };
+    return { book: book ?? null, origin };
   },
   head: ({ loaderData, params }) => {
-    const sentences = firstTwoSentences(loaderData?.review);
-    const url = loaderData ? `${loaderData.origin}/book/${params.id}` : undefined;
-    const image = loaderData ? `${loaderData.origin}/api/public/og/book/${params.id}.png` : undefined;
-    const title = loaderData ? `${loaderData.title} — ${loaderData.author}` : "Bibliotheca Vacua";
+    const book = loaderData?.book ?? null;
+    const sentences = firstTwoSentences(book?.review);
+    const url = book && loaderData ? `${loaderData.origin}/book/${params.id}` : undefined;
+    const image = book && loaderData ? `${loaderData.origin}/api/public/og/book/${params.id}.png` : undefined;
+    const title = book ? `${book.title} — ${book.author}` : "Bibliotheca Vacua";
     return {
       meta: [
         { title: `${title} · Bibliotheca Vacua` },
@@ -76,9 +78,18 @@ export const Route = createFileRoute("/book/$id")({
 
 function BookPage() {
   const { id } = Route.useParams();
-  const { data: book } = useSuspenseQuery(bookQuery(id));
+  const { data: publicBook } = useSuspenseQuery(bookQuery(id));
   const { origin } = Route.useLoaderData();
   const session = useSession();
+  const fetchPrivate = useServerFn(getPrivateBook);
+  // A book set aside for this reader is in no public catalogue; ask for it as the reader.
+  const { data: privateBook, isLoading: privateLoading } = useQuery({
+    queryKey: ["private-book", id],
+    queryFn: () => fetchPrivate({ data: { id } }),
+    enabled: Boolean(session) && !publicBook,
+    staleTime: 60_000,
+  });
+  const book = publicBook ?? privateBook ?? null;
   const navigate = useNavigate();
   const takeOut = useServerFn(takeOutBook);
   const [busy, setBusy] = useState(false);
@@ -86,7 +97,10 @@ function BookPage() {
   const [gift, setGift] = useState(false);
   useTrackSignal("card_read", { bookId: id, department: book?.department ?? null });
 
-  if (!book) return bookNotFound();
+  if (!book) {
+    if (privateLoading || session === undefined) return <Frame env="paper" narrow><p className="mt-20 text-center italic text-muted-foreground">Fetching the card…</p></Frame>;
+    return bookNotFound();
+  }
 
   const restricted = book.department === "restricted";
   const taken = book.status === "taken_forever";
@@ -134,7 +148,14 @@ function BookPage() {
           <p className="mt-1 text-lg">{book.author}</p>
           <p className="mt-2 text-sm text-muted-foreground">
             {book.kind}
-            {book.publisher && <> · {book.publisher.name}, {book.publisher.city}</>} · {book.year} · {book.pages} pages · Shelf mark {book.shelf_mark}
+            {book.publisher && (
+              <>
+                {" · "}
+                <Link to="/publisher/$id" params={{ id: book.publisher.id }} className="underline-offset-4 hover:text-foreground hover:underline">
+                  {book.publisher.name}, {book.publisher.city}
+                </Link>
+              </>
+            )}{" "}· {book.year} · {readingHint(book.pages)} · Shelf mark {book.shelf_mark}
           </p>
         </div>
       </header>

@@ -5,6 +5,7 @@ import type { SpineBook } from "@/lib/catalogue.functions";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { houseHash as publisherHash } from "@/lib/binding";
 import { cn } from "@/lib/utils";
+import { readingHint } from "@/lib/reading-time";
 
 function firstSentences(text: string | null, count = 2) {
   if (!text) return null;
@@ -17,7 +18,7 @@ function firstSentences(text: string | null, count = 2) {
 
 function imprint(book: SpineBook) {
   const pub = book.publisher ? `${book.publisher.name}, ${book.publisher.city}` : null;
-  return [book.kind, pub, String(book.year), `${book.pages} pages`, `Shelf mark ${book.shelf_mark}`]
+  return [book.kind, pub, String(book.year), readingHint(book.pages), `Shelf mark ${book.shelf_mark}`]
     .filter(Boolean)
     .join(" · ");
 }

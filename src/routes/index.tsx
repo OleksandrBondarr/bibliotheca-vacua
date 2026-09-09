@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { hallQuery } from "@/lib/catalogue.functions";
 import { DEPARTMENTS } from "@/lib/departments";
@@ -39,6 +40,26 @@ function DrawerFace({ label, note }: { label?: string; note?: string }) {
   );
 }
 
+/** A brass reading lamp with a pull switch: after closing, only its pool of light remains. */
+function ReadingLamp({ closed, onPull }: { closed: boolean; onPull: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onPull}
+      aria-pressed={closed}
+      aria-label={closed ? "Open the library again" : "After closing: dim the library"}
+      title={closed ? "Open the library again" : "After closing"}
+      className="reading-lamp"
+    >
+      <span aria-hidden className="pool" />
+      <span aria-hidden className="shade" />
+      <span aria-hidden className="pull" />
+      <span aria-hidden className="stem" />
+      <span aria-hidden className="foot" />
+    </button>
+  );
+}
+
 export const Route = createFileRoute("/")({
   loader: async ({ context }) => {
     const [, origin] = await Promise.all([
@@ -68,11 +89,26 @@ export const Route = createFileRoute("/")({
 
 function Hall() {
   const { data } = useSuspenseQuery(hallQuery);
+  const [closed, setClosed] = useState(false);
+  useEffect(() => {
+    setClosed(window.localStorage.getItem("bv-after-closing") === "1");
+  }, []);
+  function pull() {
+    setClosed((was) => {
+      const next = !was;
+      window.localStorage.setItem("bv-after-closing", next ? "1" : "0");
+      return next;
+    });
+  }
 
   return (
     <Frame env="hall">
-      <div>
-      <section className="pt-16 pb-12 text-center">
+      <div className={closed ? "hall-closed" : undefined}>
+      <section className="relative pt-16 pb-12 text-center">
+        <div aria-hidden className="dust">
+          <span />
+          <span />
+        </div>
         <h1 className="mx-auto max-w-xl text-4xl leading-tight [text-wrap:balance] sm:text-5xl">
           A library of books that do not exist
         </h1>
@@ -84,9 +120,9 @@ function Hall() {
         </p>
       </section>
 
-      <section aria-labelledby="lem" className="mb-14">
+      <section id="lem" aria-labelledby="lem-heading" className="mb-14 scroll-mt-20">
         <div className="mb-3 px-1">
-          <h2 id="lem" className="text-xl">
+          <h2 id="lem-heading" className="text-xl">
             In the neighbourhood of Lem
           </h2>
           <p className="mt-1 text-sm italic text-muted-foreground">
@@ -100,8 +136,6 @@ function Hall() {
           vitrineTheme={LEM_VITRINE_THEME}
         />
       </section>
-
-      <HeldShelf className="mb-14 mt-0" />
 
       <section aria-labelledby="departments" className="mb-14">
         <h2 id="departments" className="mb-3 px-1 text-small-caps text-sm text-muted-foreground">
@@ -130,6 +164,8 @@ function Hall() {
       </section>
 
 
+      <HeldShelf className="mb-14 mt-0" />
+
       <section aria-labelledby="arrivals" className="mb-14">
         <h2 id="arrivals" className="mb-3 px-1 text-small-caps text-sm text-muted-foreground">
           New arrivals
@@ -146,6 +182,7 @@ function Hall() {
         ))}
       </section>
       </div>
+      <ReadingLamp closed={closed} onPull={pull} />
     </Frame>
   );
 }

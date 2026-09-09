@@ -13,11 +13,13 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ChronicleRouteImport } from './routes/chronicle'
 import { Route as TakenRouteImport } from './routes/taken'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedCardRouteImport } from './routes/_authenticated/card'
 import { Route as BookIdRouteImport } from './routes/book.$id'
 import { Route as DepartmentSlugRouteImport } from './routes/department.$slug'
+import { Route as PublisherIdRouteImport } from './routes/publisher.$id'
 import { Route as AuthenticatedReadLoanIdRouteImport } from './routes/_authenticated/read.$loanId'
 import { Route as ApiPublicOgBookIdRouteImport } from './routes/api/public/og/book.$id'
 import { Route as ApiPublicOgPageKeyRouteImport } from './routes/api/public/og/page.$key'
@@ -39,6 +41,11 @@ const AboutRoute = AboutRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChronicleRoute = ChronicleRouteImport.update({
+  id: '/chronicle',
+  path: '/chronicle',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TakenRoute = TakenRouteImport.update({
@@ -66,6 +73,11 @@ const DepartmentSlugRoute = DepartmentSlugRouteImport.update({
   path: '/department/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PublisherIdRoute = PublisherIdRouteImport.update({
+  id: '/publisher/$id',
+  path: '/publisher/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedReadLoanIdRoute = AuthenticatedReadLoanIdRouteImport.update({
   id: '/read/$loanId',
   path: '/read/$loanId',
@@ -86,11 +98,13 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/chronicle': typeof ChronicleRoute
   '/taken': typeof TakenRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/card': typeof AuthenticatedCardRoute
   '/book/$id': typeof BookIdRoute
   '/department/$slug': typeof DepartmentSlugRoute
+  '/publisher/$id': typeof PublisherIdRoute
   '/read/$loanId': typeof AuthenticatedReadLoanIdRoute
   '/api/public/og/book/$id': typeof ApiPublicOgBookIdRoute
   '/api/public/og/page/$key': typeof ApiPublicOgPageKeyRoute
@@ -99,11 +113,13 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/chronicle': typeof ChronicleRoute
   '/taken': typeof TakenRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/card': typeof AuthenticatedCardRoute
   '/book/$id': typeof BookIdRoute
   '/department/$slug': typeof DepartmentSlugRoute
+  '/publisher/$id': typeof PublisherIdRoute
   '/read/$loanId': typeof AuthenticatedReadLoanIdRoute
   '/api/public/og/book/$id': typeof ApiPublicOgBookIdRoute
   '/api/public/og/page/$key': typeof ApiPublicOgPageKeyRoute
@@ -114,11 +130,13 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/chronicle': typeof ChronicleRoute
   '/taken': typeof TakenRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/card': typeof AuthenticatedCardRoute
   '/book/$id': typeof BookIdRoute
   '/department/$slug': typeof DepartmentSlugRoute
+  '/publisher/$id': typeof PublisherIdRoute
   '/_authenticated/read/$loanId': typeof AuthenticatedReadLoanIdRoute
   '/api/public/og/book/$id': typeof ApiPublicOgBookIdRoute
   '/api/public/og/page/$key': typeof ApiPublicOgPageKeyRoute
@@ -129,11 +147,13 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/auth'
+    | '/chronicle'
     | '/taken'
     | '/admin'
     | '/card'
     | '/book/$id'
     | '/department/$slug'
+    | '/publisher/$id'
     | '/read/$loanId'
     | '/api/public/og/book/$id'
     | '/api/public/og/page/$key'
@@ -142,11 +162,13 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/auth'
+    | '/chronicle'
     | '/taken'
     | '/admin'
     | '/card'
     | '/book/$id'
     | '/department/$slug'
+    | '/publisher/$id'
     | '/read/$loanId'
     | '/api/public/og/book/$id'
     | '/api/public/og/page/$key'
@@ -156,11 +178,13 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/about'
     | '/auth'
+    | '/chronicle'
     | '/taken'
     | '/_authenticated/admin'
     | '/_authenticated/card'
     | '/book/$id'
     | '/department/$slug'
+    | '/publisher/$id'
     | '/_authenticated/read/$loanId'
     | '/api/public/og/book/$id'
     | '/api/public/og/page/$key'
@@ -171,9 +195,11 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
+  ChronicleRoute: typeof ChronicleRoute
   TakenRoute: typeof TakenRoute
   BookIdRoute: typeof BookIdRoute
   DepartmentSlugRoute: typeof DepartmentSlugRoute
+  PublisherIdRoute: typeof PublisherIdRoute
   ApiPublicOgBookIdRoute: typeof ApiPublicOgBookIdRoute
   ApiPublicOgPageKeyRoute: typeof ApiPublicOgPageKeyRoute
 }
@@ -206,6 +232,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chronicle': {
+      id: '/chronicle'
+      path: '/chronicle'
+      fullPath: '/chronicle'
+      preLoaderRoute: typeof ChronicleRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/taken': {
@@ -241,6 +274,13 @@ declare module '@tanstack/react-router' {
       path: '/department/$slug'
       fullPath: '/department/$slug'
       preLoaderRoute: typeof DepartmentSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/publisher/$id': {
+      id: '/publisher/$id'
+      path: '/publisher/$id'
+      fullPath: '/publisher/$id'
+      preLoaderRoute: typeof PublisherIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/read/$loanId': {
@@ -287,9 +327,11 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
+  ChronicleRoute: ChronicleRoute,
   TakenRoute: TakenRoute,
   BookIdRoute: BookIdRoute,
   DepartmentSlugRoute: DepartmentSlugRoute,
+  PublisherIdRoute: PublisherIdRoute,
   ApiPublicOgBookIdRoute: ApiPublicOgBookIdRoute,
   ApiPublicOgPageKeyRoute: ApiPublicOgPageKeyRoute,
 }

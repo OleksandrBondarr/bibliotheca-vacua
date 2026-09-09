@@ -3,7 +3,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { z } from "zod";
 import { DEPARTMENTS, isDepartment, type Department } from "./departments";
 
-export type PublisherRef = { name: string; city: string; style_note: string | null } | null;
+export type PublisherRef = { id: string; name: string; city: string; style_note: string | null } | null;
 
 export type SpineBook = {
   id: string;
@@ -38,7 +38,7 @@ export type TakenBook = {
 };
 
 const SPINE_COLUMNS =
-  "id, title, author, pages, spine_color, status, department, shelf, featured, kind, year, review, shelf_mark, publisher:publishers(name, city, style_note)";
+  "id, title, author, pages, spine_color, status, department, shelf, featured, kind, year, review, shelf_mark, publisher:publishers(id, name, city, style_note)";
 
 
 export const getHall = createServerFn({ method: "GET" }).handler(async () => {
@@ -138,6 +138,26 @@ export const listTaken = createServerFn({ method: "GET" }).handler(async () => {
   if (error) throw new Error(error.message);
   return (data ?? []) as TakenBook[];
 });
+
+/** One publishing house and everything of its making on the shelves. */
+export const getPublisher = createServerFn({ method: "GET" })
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data }) => {
+    const { createPublicClient } = await import("./public-client.server");
+    const db = createPublicClient();
+    const [{ data: publisher }, { data: books }] = await Promise.all([
+      db.from("publishers").select("id, name, city, style_note").eq("id", data.id).maybeSingle(),
+      db.from("books").select(SPINE_COLUMNS).eq("publisher_id", data.id).order("year", { ascending: true }),
+    ]);
+    if (!publisher) return null;
+    return { publisher, books: (books ?? []) as SpineBook[] };
+  });
+
+export const publisherQuery = (id: string) =>
+  queryOptions({
+    queryKey: ["publisher", id],
+    queryFn: () => getPublisher({ data: { id } }),
+  });
 
 /* Query options shared by loaders and components */
 export const hallQuery = queryOptions({

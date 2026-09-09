@@ -20,7 +20,7 @@ export type SignalKind = (typeof SIGNAL_KINDS)[number];
 export const SIGNALS_BEFORE_SHELF = 6;
 
 const HELD_COLUMNS =
-  "id, title, author, pages, spine_color, status, department, shelf, featured, kind, year, review, shelf_mark, publisher:publishers(name, city, style_note)";
+  "id, title, author, pages, spine_color, status, department, shelf, featured, kind, year, review, shelf_mark, publisher:publishers(id, name, city, style_note)";
 
 /** Records one trace. Silently ignored for anonymous visitors (no bearer, no call). */
 export const recordSignal = createServerFn({ method: "POST" })
@@ -201,6 +201,22 @@ export const getHeldShelf = createServerFn({ method: "GET" })
     }
 
     return { enabled: held.length > 0, note, books: held.slice(0, 3), signals: total };
+  });
+
+/**
+ * A book set aside for this reader is invisible to the public catalogue, so its
+ * card has to be fetched as the reader themselves.
+ */
+export const getPrivateBook = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: book } = await context.supabase
+      .from("books")
+      .select(`${HELD_COLUMNS}, kept_by_name, kept_at`)
+      .eq("id", data.id)
+      .maybeSingle();
+    return (book as unknown as SpineBook & { kept_by_name: string | null; kept_at: string | null }) ?? null;
   });
 
 /** "Not for me": records the dismissal and takes the book off the reader's shelf. */
