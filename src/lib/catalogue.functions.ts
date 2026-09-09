@@ -139,6 +139,26 @@ export const listTaken = createServerFn({ method: "GET" }).handler(async () => {
   return (data ?? []) as TakenBook[];
 });
 
+/** One publishing house and everything of its making on the shelves. */
+export const getPublisher = createServerFn({ method: "GET" })
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data }) => {
+    const { createPublicClient } = await import("./public-client.server");
+    const db = createPublicClient();
+    const [{ data: publisher }, { data: books }] = await Promise.all([
+      db.from("publishers").select("id, name, city, style_note").eq("id", data.id).maybeSingle(),
+      db.from("books").select(SPINE_COLUMNS).eq("publisher_id", data.id).order("year", { ascending: true }),
+    ]);
+    if (!publisher) return null;
+    return { publisher, books: (books ?? []) as SpineBook[] };
+  });
+
+export const publisherQuery = (id: string) =>
+  queryOptions({
+    queryKey: ["publisher", id],
+    queryFn: () => getPublisher({ data: { id } }),
+  });
+
 /* Query options shared by loaders and components */
 export const hallQuery = queryOptions({
   queryKey: ["hall"],
