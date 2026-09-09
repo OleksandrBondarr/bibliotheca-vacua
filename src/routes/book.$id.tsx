@@ -38,13 +38,14 @@ export const Route = createFileRoute("/book/$id")({
       context.queryClient.ensureQueryData(bookQuery(params.id)),
       getRequestOrigin(),
     ]);
-    return { ...(book ?? {}), origin, missing: !book };
+    return { book: book ?? null, origin };
   },
   head: ({ loaderData, params }) => {
-    const sentences = firstTwoSentences(loaderData?.review);
-    const url = loaderData ? `${loaderData.origin}/book/${params.id}` : undefined;
-    const image = loaderData ? `${loaderData.origin}/api/public/og/book/${params.id}.png` : undefined;
-    const title = loaderData ? `${loaderData.title} — ${loaderData.author}` : "Bibliotheca Vacua";
+    const book = loaderData?.book ?? null;
+    const sentences = firstTwoSentences(book?.review);
+    const url = book && loaderData ? `${loaderData.origin}/book/${params.id}` : undefined;
+    const image = book && loaderData ? `${loaderData.origin}/api/public/og/book/${params.id}.png` : undefined;
+    const title = book ? `${book.title} — ${book.author}` : "Bibliotheca Vacua";
     return {
       meta: [
         { title: `${title} · Bibliotheca Vacua` },
