@@ -3,7 +3,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { z } from "zod";
 import { DEPARTMENTS, isDepartment, type Department } from "./departments";
 
-export type PublisherRef = { name: string; city: string; style_note: string | null } | null;
+export type PublisherRef = { id: string; name: string; city: string; style_note: string | null } | null;
 
 export type SpineBook = {
   id: string;
@@ -38,7 +38,7 @@ export type TakenBook = {
 };
 
 const SPINE_COLUMNS =
-  "id, title, author, pages, spine_color, status, department, shelf, featured, kind, year, review, shelf_mark, publisher:publishers(name, city, style_note)";
+  "id, title, author, pages, spine_color, status, department, shelf, featured, kind, year, review, shelf_mark, publisher:publishers(id, name, city, style_note)";
 
 
 export const getHall = createServerFn({ method: "GET" }).handler(async () => {
