@@ -455,7 +455,7 @@
 @utility vitrine-label {
   width: 156px;
   min-height: 112px;
-  margin-right: 12px;
+  margin-right: 26px;
   margin-bottom: 10px;
   padding: 12px 11px 10px;
   color: var(--color-ink);
@@ -560,11 +560,6 @@
   width: fit-content;
   max-width: 100%;
   min-width: 180px;
-}
-
-/* Room and label breathing space inside the commemorative vitrine */
-@utility vitrine-label {
-  margin-right: 26px;
 }
 
 /* ------------------------------------------------------------------ */
