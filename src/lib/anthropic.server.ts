@@ -298,6 +298,13 @@ function clamp(n: number, lo: number, hi: number) {
 
 export type HeldShelf = { note: string; entries: (CatalogueEntry & { department: string })[] };
 
+/** Trims a title to the library's rule: one to five words, no subtitle. */
+function shortTitle(raw: string): string {
+  const head = (raw.split(/\s*[:;—–]\s*/)[0] ?? raw).trim();
+  const words = head.split(/\s+/).filter(Boolean);
+  return words.slice(0, 5).join(" ").replace(/[,.]$/, "");
+}
+
 /**
  * Reads a reader's traces and sets three books aside for them:
  * two sentences on what this reader is drawn to, then three catalogue entries.
@@ -315,7 +322,7 @@ Return a JSON object:
   "note": string (exactly two sentences, third person, calm and exact, on what this reader appears drawn to — departments, moods, forms — and what you are therefore setting aside),
   "entries": array of exactly 3 objects:
   {
-    "title": string,
+    "title": string (1-5 words, no colon, no subtitle, no explanatory second half),
     "author": string (invented; vary nationalities),
     "kind": string,
     "department": one of "novels" | "poetry" | "treatises" | "sciences" | "memoirs" | "reference",
@@ -344,6 +351,8 @@ Output the JSON object and nothing else.`;
       pages: clamp(Math.round(Number(e.pages) || 200), 64, 420),
       spine_color: /^#[0-9a-f]{6}$/i.test(e.spine_color ?? "") ? e.spine_color : "#5a4a3a",
       kind: e.kind || "Book",
+      // A set-aside book gets a short spine title, like every other book here.
+      title: shortTitle(e.title),
     }));
   return { note: (raw.note ?? "").trim(), entries };
 }
