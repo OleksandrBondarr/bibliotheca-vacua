@@ -4,7 +4,7 @@ import { departmentQuery } from "@/lib/catalogue.functions";
 import { DEPARTMENTS, isDepartment } from "@/lib/departments";
 import { Frame } from "@/components/library/Frame";
 import { useTrackSignal } from "@/hooks/useTrackSignal";
-import { NamedShelves, ShelvesByPublisher } from "@/components/library/Shelf";
+import { NamedShelves, Shelves } from "@/components/library/Shelf";
 import { SCIENCE_SHELVES } from "@/lib/shelves";
 
 
@@ -59,7 +59,7 @@ function DepartmentPage() {
       {slug === "sciences" ? (
         <NamedShelves books={books} shelves={SCIENCE_SHELVES} />
       ) : (
-        <ShelvesByPublisher books={books} />
+        <Shelves books={books} perRow={14} />
       )}
 
     </Frame>
