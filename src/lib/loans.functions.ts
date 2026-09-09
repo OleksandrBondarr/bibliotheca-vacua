@@ -6,6 +6,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { LOAN_DAYS, MAX_ACTIVE_LOANS, MAX_LOANS_PER_DAY } from "./departments";
 import { noteSignal } from "./reader.functions";
 import { NAME_REQUIRED } from "./profile.functions";
+import { noteChronicle } from "./chronicle.functions";
 
 const BOOK_JOIN = "book:books(id, title, author, kind, year, pages, department, shelf, review)";
 
@@ -52,7 +53,7 @@ export const takeOutBook = createServerFn({ method: "POST" })
 
     const { data: book, error: bookErr } = await supabase
       .from("books")
-      .select("id, status, department")
+      .select("id, title, status, department")
       .eq("id", data.bookId)
       .maybeSingle();
     if (bookErr) throw new Error(bookErr.message);
@@ -68,7 +69,7 @@ export const takeOutBook = createServerFn({ method: "POST" })
     const existing = active?.find((l) => l.book_id === data.bookId);
     if (existing) return { loanId: existing.id, alreadyOnLoan: true };
     if ((active?.length ?? 0) >= MAX_ACTIVE_LOANS) {
-      throw new Error(`A reader may hold at most ${MAX_ACTIVE_LOANS} books at once.`);
+      throw new Error("You have three books on loan. Return one on your card to take another.");
     }
 
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -89,6 +90,7 @@ export const takeOutBook = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
     await noteSignal(supabase as never, userId, "taken", { department: book.department, bookId: book.id });
+    await noteChronicle(supabase as never, userId, "taken_out", { id: book.id, title: book.title });
     return { loanId: loan.id, alreadyOnLoan: false };
   });
 
@@ -99,7 +101,11 @@ export const getReaderCard = createServerFn({ method: "GET" })
     await expireStaleLoans(supabase, userId);
 
     const [{ data: profile }, { data: loans }, { data: isAdmin }] = await Promise.all([
-      supabase.from("profiles").select("display_name, card_number, issued_at").eq("user_id", userId).maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("display_name, card_number, issued_at, chronicle_opt_out")
+        .eq("user_id", userId)
+        .maybeSingle(),
       supabase
         .from("loans")
         .select(`id, started_at, ends_at, status, current_page, book:books(id, title, author, pages)`)
@@ -215,7 +221,7 @@ export const returnBook = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { data: before } = await supabase
       .from("loans")
-      .select("current_page, book:books(id, department, pages)")
+      .select("current_page, book:books(id, title, department, pages)")
       .eq("id", data.loanId)
       .maybeSingle();
     const { error } = await supabase
@@ -224,7 +230,8 @@ export const returnBook = createServerFn({ method: "POST" })
       .eq("id", data.loanId)
       .eq("status", "active");
     if (error) throw new Error(error.message);
-    const rb = before?.book as unknown as { id: string; department: string; pages: number } | null;
+    const rb = before?.book as unknown as { id: string; title: string; department: string; pages: number } | null;
+    if (rb) await noteChronicle(supabase as never, userId, "returned", { id: rb.id, title: rb.title });
     // "Returned early" means before a fifth of the book was read.
     if (before && rb && before.current_page < Math.max(2, Math.ceil(rb.pages * 0.2))) {
       const b = rb;
@@ -243,7 +250,7 @@ export const requestKeep = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { data: loan } = await supabase
       .from("loans")
-      .select("id, book:books(id, department)")
+      .select("id, book:books(id, title, department)")
       .eq("id", data.loanId)
       .maybeSingle();
     if (!loan) throw new Error("This loan is not on your card.");
@@ -251,7 +258,8 @@ export const requestKeep = createServerFn({ method: "POST" })
       .from("keep_requests")
       .insert({ user_id: userId, loan_id: data.loanId, email: data.email.trim().toLowerCase() });
     if (error) throw new Error(error.message);
-    const kb = loan.book as unknown as { id: string; department: string } | null;
+    const kb = loan.book as unknown as { id: string; title: string; department: string } | null;
+    if (kb) await noteChronicle(supabase as never, userId, "kept_forever", { id: kb.id, title: kb.title });
     if (kb?.id) await supabase.rpc("note_keep_name", { _book_id: kb.id });
     await noteSignal(supabase as never, userId, "kept", { department: kb?.department, bookId: kb?.id });
     return { ok: true };
