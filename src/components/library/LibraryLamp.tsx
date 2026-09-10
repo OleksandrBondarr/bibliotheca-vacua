@@ -37,7 +37,7 @@ export function LibraryLamp({ closed, onPull }: { closed: boolean; onPull: () =>
   useEffect(() => {
     const enabled = soundEnabled();
     setSound(enabled);
-    if (enabled) startAmbience();
+    if (enabled) void startAmbience();
   }, []);
 
   function toggleSound() {
@@ -45,6 +45,7 @@ export function LibraryLamp({ closed, onPull }: { closed: boolean; onPull: () =>
     setSound(next);
     setSoundEnabled(next);
   }
+
 
   return (
     <>
