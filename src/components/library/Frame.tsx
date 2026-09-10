@@ -6,6 +6,8 @@ import { useSession } from "@/hooks/useSession";
 import { DEPARTMENTS } from "@/lib/departments";
 import { getReaderCard } from "@/lib/loans.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { LibraryLamp, useLampState } from "@/components/library/LibraryLamp";
+
 
 /** True between 23:00 and 05:00 by the visitor's own clock. Client-side only. */
 export function useNightShift() {
@@ -40,6 +42,8 @@ export function Frame({
   const session = useSession();
   const [open, setOpen] = useState(false);
   const night = useNightShift();
+  const { closed, pull } = useLampState();
+
 
   const { data: card } = useQuery({
     queryKey: ["reader-card", session?.user.id ?? null],
@@ -64,9 +68,12 @@ export function Frame({
       className={cn(
         env === "hall" ? "hall hall-light" : "paper",
         env === "hall" && night && "hall-night",
+        closed && "hall-closed",
         "min-h-screen overflow-x-hidden bg-background text-foreground",
       )}
     >
+      <LibraryLamp closed={closed} onPull={pull} />
+
       <svg aria-hidden className="absolute h-0 w-0 overflow-hidden">
         <defs>
           <filter id="cloth-grain" x="0" y="0" width="100%" height="100%">
