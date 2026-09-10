@@ -188,7 +188,7 @@ function Hall() {
         ))}
       </section>
       </div>
-      <ReadingLamp closed={closed} sound={sound} onPull={pull} onSound={toggleSound} />
+      
     </Frame>
   );
 }
