@@ -96,33 +96,12 @@ export const Route = createFileRoute("/")({
 
 function Hall() {
   const { data } = useSuspenseQuery(hallQuery);
-  const [closed, setClosed] = useState(false);
-  const [sound, setSound] = useState(false);
-  useEffect(() => {
-    setClosed(window.localStorage.getItem("bv-after-closing") === "1");
-    const enabled = soundEnabled();
-    setSound(enabled);
-    if (enabled) startAmbience();
-  }, []);
-  function pull() {
-    playLampClick();
-    setClosed((was) => {
-      const next = !was;
-      window.localStorage.setItem("bv-after-closing", next ? "1" : "0");
-      return next;
-    });
-  }
-  function toggleSound() {
-    const next = !sound;
-    setSound(next);
-    setSoundEnabled(next);
-  }
 
   return (
     <Frame env="hall" className="hall-main">
       <div aria-hidden className="hall-depth" />
-      <div aria-hidden className={closed ? "lights-out-layer active" : "lights-out-layer"} />
-      <div className={closed ? "hall-closed" : undefined}>
+      <div>
+
       <section className="relative pt-16 pb-12 text-center">
         <div aria-hidden className="dust">
           <span />
