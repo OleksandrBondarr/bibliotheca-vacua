@@ -726,8 +726,8 @@ main { padding-bottom: 96px; }
   transition: opacity 220ms ease;
 }
 .hall-closed .hall-depth { opacity: 0; }
-/* Lights out: a warm-green pool over the middle of the viewport, where the   */
-/* reader is looking; near-black toward the edges. Follows the scroll.        */
+/* Lights out: a wide, soft pool over the middle of the viewport, where the    */
+/* reader is looking, fading by degrees with no visible edge. Follows scroll.  */
 .lights-out-layer {
   position: fixed;
   inset: 0;
@@ -735,11 +735,13 @@ main { padding-bottom: 96px; }
   pointer-events: none;
   opacity: 0;
   background: radial-gradient(
-    ellipse 35vw 38vh at 50% 50%,
-    oklch(0.72 0.09 128 / 8%) 0,
-    oklch(0.62 0.07 128 / 5%) 48%,
-    oklch(0.08 0.015 155 / 74%) 82%,
-    oklch(0.02 0.004 155 / 97%) 100%
+    ellipse 72vw 78vh at 50% 50%,
+    oklch(0.74 0.075 128 / 5%) 0,
+    oklch(0.66 0.06 128 / 4%) 26%,
+    oklch(0.2 0.02 155 / 16%) 48%,
+    oklch(0.1 0.016 155 / 44%) 66%,
+    oklch(0.05 0.01 155 / 70%) 82%,
+    oklch(0.03 0.006 155 / 86%) 100%
   );
 
   transition: opacity 500ms ease;
@@ -747,14 +749,28 @@ main { padding-bottom: 96px; }
 @media (max-width: 639px) {
   .lights-out-layer {
     background: radial-gradient(
-      ellipse 45vw 40vh at 50% 50%,
-      oklch(0.7 0.09 128 / 8%) 0,
-      oklch(0.62 0.07 128 / 5%) 46%,
-      oklch(0.08 0.015 155 / 74%) 84%,
-      oklch(0.02 0.004 155 / 97%) 100%
+      ellipse 92vw 72vh at 50% 50%,
+      oklch(0.74 0.075 128 / 5%) 0,
+      oklch(0.66 0.06 128 / 4%) 28%,
+      oklch(0.2 0.02 155 / 15%) 50%,
+      oklch(0.1 0.016 155 / 42%) 70%,
+      oklch(0.04 0.008 155 / 80%) 100%
     );
   }
 }
+/* Paper pages stay lit paper: the room dims around them, gently. */
+.paper .lights-out-layer,
+.paper.lights-out-layer {
+  background: radial-gradient(
+    ellipse 84vw 88vh at 50% 50%,
+    oklch(0.82 0.05 105 / 3%) 0,
+    oklch(0.5 0.03 120 / 6%) 40%,
+    oklch(0.28 0.02 140 / 20%) 66%,
+    oklch(0.16 0.015 150 / 38%) 84%,
+    oklch(0.12 0.012 150 / 50%) 100%
+  );
+}
+
 .lights-out-layer.active { opacity: 1; }
 .hall-closed > header,
 .hall-closed > footer,
