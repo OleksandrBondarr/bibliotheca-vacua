@@ -677,14 +677,26 @@
 .hall-closed .lamp-pool {
   opacity: 1;
 }
+/* Sound: the word alone, in the page's own ink; underlined when it is on. */
 .sound-toggle {
   border: 0;
-  background: var(--color-hall);
-  color: var(--color-muted-foreground);
-  padding: 4px 6px;
-  font-size: 15px;
-  font-style: italic;
+  background: none;
+  padding: 2px 0;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  color: color-mix(in oklch, currentColor, transparent 32%);
+  text-decoration: none;
+  cursor: pointer;
 }
+.sound-toggle:hover {
+  color: currentColor;
+}
+.sound-toggle.is-on {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
 .reading-lamp:active .lamp-chain { animation: chain-pull 180ms ease-out; }
 @keyframes chain-pull { 50% { transform: translateY(5px) rotate(4deg); } }
 @media (min-width: 640px) {
