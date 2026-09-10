@@ -107,6 +107,23 @@ export const setChronicleOptOut = createServerFn({ method: "POST" })
       .update({ chronicle_opt_out: data.optOut })
       .eq("user_id", context.userId);
     if (error) throw new Error(error.message);
+    // Opting out is retroactive: past lines under this reader's name become "A reader".
+    if (data.optOut) {
+      try {
+        const { data: profile } = await context.supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("user_id", context.userId)
+          .maybeSingle();
+        const name = profile?.display_name?.trim();
+        if (name) {
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          await supabaseAdmin.from("chronicle_events").update({ reader_name: "A reader" }).eq("reader_name", name);
+        }
+      } catch {
+        /* the preference is saved even if rewriting the past lines fails */
+      }
+    }
     return { optOut: data.optOut };
   });
 
