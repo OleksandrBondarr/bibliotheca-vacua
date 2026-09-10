@@ -71,7 +71,12 @@ function noiseBuffer(ctx: AudioContext, seconds: number, smoothing = 0.985) {
 
 /** A quiet room: air, distant floorboards, the odd chair. Loops seamlessly. */
 export async function startAmbience() {
-  if (!soundEnabled() || ambience) return;
+  if (!soundEnabled()) return;
+  if (ambience) {
+    // Already built; a fresh gesture may be all it needs to be heard.
+    await ensureRunning();
+    return;
+  }
   const ctx = await ensureRunning();
   const out = ctx.createGain();
   out.gain.value = 0.0001;
