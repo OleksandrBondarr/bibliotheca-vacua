@@ -574,9 +574,10 @@
 }
 .hall-closed .shelf-case,
 .hall-closed .catalogue-cabinet {
-  filter: brightness(0.42) saturate(0.7);
+  filter: brightness(0.62) saturate(0.82);
   transition: filter 700ms ease;
 }
+
 .hall-closed .vitrine {
   filter: none;
 }
