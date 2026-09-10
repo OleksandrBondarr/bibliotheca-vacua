@@ -722,12 +722,13 @@ main { padding-bottom: 96px; }
   pointer-events: none;
   opacity: 0;
   background: radial-gradient(
-    ellipse 45vw 42vh at 50% 50%,
-    oklch(0.7 0.09 128 / 8%) 0,
-    oklch(0.62 0.07 128 / 5%) 42%,
-    oklch(0.08 0.015 155 / 72%) 78%,
+    ellipse 35vw 38vh at 50% 50%,
+    oklch(0.72 0.09 128 / 8%) 0,
+    oklch(0.62 0.07 128 / 5%) 48%,
+    oklch(0.08 0.015 155 / 74%) 82%,
     oklch(0.02 0.004 155 / 97%) 100%
   );
+
   transition: opacity 500ms ease;
 }
 @media (max-width: 639px) {
