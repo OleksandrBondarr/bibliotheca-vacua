@@ -37,14 +37,27 @@ export function LibraryLamp({ closed, onPull }: { closed: boolean; onPull: () =>
   useEffect(() => {
     const enabled = soundEnabled();
     setSound(enabled);
-    if (enabled) startAmbience();
+    if (!enabled) return;
+    // A fresh page load has no gesture yet, so browsers keep audio suspended:
+    // start the room again on the reader's first touch, click or key.
+    void startAmbience();
+    const wake = () => void startAmbience();
+    const opts = { once: true } as const;
+    window.addEventListener("pointerdown", wake, opts);
+    window.addEventListener("keydown", wake, opts);
+    return () => {
+      window.removeEventListener("pointerdown", wake);
+      window.removeEventListener("keydown", wake);
+    };
   }, []);
+
 
   function toggleSound() {
     const next = !sound;
     setSound(next);
     setSoundEnabled(next);
   }
+
 
   return (
     <>
@@ -65,9 +78,15 @@ export function LibraryLamp({ closed, onPull }: { closed: boolean; onPull: () =>
           <span aria-hidden className="lamp-column" />
           <span aria-hidden className="lamp-foot" />
         </button>
-        <button type="button" className="sound-toggle" aria-pressed={sound} onClick={toggleSound}>
+        <button
+          type="button"
+          className={sound ? "sound-toggle text-small-caps is-on" : "sound-toggle text-small-caps"}
+          aria-pressed={sound}
+          onClick={toggleSound}
+        >
           {sound ? "sound" : "quiet"}
         </button>
+
       </div>
     </>
   );
