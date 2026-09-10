@@ -515,6 +515,9 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+  .lights-out-layer {
+    background: oklch(0.025 0.004 155 / 94%);
+  }
 }
 
 /* Shelves scroll sideways; scrollbar space never changes the shelf geometry. */
