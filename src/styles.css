@@ -574,9 +574,10 @@
 }
 .hall-closed .shelf-case,
 .hall-closed .catalogue-cabinet {
-  filter: brightness(0.42) saturate(0.7);
+  filter: brightness(0.62) saturate(0.82);
   transition: filter 700ms ease;
 }
+
 .hall-closed .vitrine {
   filter: none;
 }
@@ -698,6 +699,8 @@
 
 /* Receding stacks: atmosphere only, fading before the physical shelves. */
 .hall-main { position: relative; padding-bottom: 110px; }
+main { padding-bottom: 96px; }
+
 .hall-depth {
   position: fixed;
   inset: 0;
@@ -710,20 +713,41 @@
     repeating-linear-gradient(0deg, transparent 0 150px, oklch(0.07 0.015 150 / 70%) 150px 162px, transparent 162px 270px);
   transition: opacity 220ms ease;
 }
-.hall:has(.hall-closed) .hall-depth { opacity: 0; }
+.hall-closed .hall-depth { opacity: 0; }
+/* Lights out: a warm-green pool over the middle of the viewport, where the   */
+/* reader is looking; near-black toward the edges. Follows the scroll.        */
 .lights-out-layer {
   position: fixed;
   inset: 0;
   z-index: 20;
   pointer-events: none;
   opacity: 0;
-  background: radial-gradient(circle 230px at calc(100% - 48px) 62%, oklch(0.62 0.08 128 / 18%) 0, oklch(0.08 0.015 155 / 83%) 68%, oklch(0.025 0.004 155 / 97%) 100%);
+  background: radial-gradient(
+    ellipse 35vw 38vh at 50% 50%,
+    oklch(0.72 0.09 128 / 8%) 0,
+    oklch(0.62 0.07 128 / 5%) 48%,
+    oklch(0.08 0.015 155 / 74%) 82%,
+    oklch(0.02 0.004 155 / 97%) 100%
+  );
+
   transition: opacity 500ms ease;
 }
+@media (max-width: 639px) {
+  .lights-out-layer {
+    background: radial-gradient(
+      ellipse 45vw 40vh at 50% 50%,
+      oklch(0.7 0.09 128 / 8%) 0,
+      oklch(0.62 0.07 128 / 5%) 46%,
+      oklch(0.08 0.015 155 / 74%) 84%,
+      oklch(0.02 0.004 155 / 97%) 100%
+    );
+  }
+}
 .lights-out-layer.active { opacity: 1; }
-.hall:has(.hall-closed) > header,
-.hall:has(.hall-closed) > footer,
-.hall:has(.hall-closed) .lamp-controls { z-index: 80; }
+.hall-closed > header,
+.hall-closed > footer,
+.hall-closed .lamp-controls { z-index: 80; }
+
 
 /* Night shift: the hall sits a shade darker between 23:00 and 05:00 */
 .hall-night {
