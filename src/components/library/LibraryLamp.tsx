@@ -66,9 +66,15 @@ export function LibraryLamp({ closed, onPull }: { closed: boolean; onPull: () =>
           <span aria-hidden className="lamp-column" />
           <span aria-hidden className="lamp-foot" />
         </button>
-        <button type="button" className="sound-toggle" aria-pressed={sound} onClick={toggleSound}>
+        <button
+          type="button"
+          className={sound ? "sound-toggle text-small-caps is-on" : "sound-toggle text-small-caps"}
+          aria-pressed={sound}
+          onClick={toggleSound}
+        >
           {sound ? "sound" : "quiet"}
         </button>
+
       </div>
     </>
   );
