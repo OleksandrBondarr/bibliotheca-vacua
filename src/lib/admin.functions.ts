@@ -117,10 +117,10 @@ export const addLemShelf = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     await assertAdmin(context);
     const { supabase } = context;
-    const { generateLemCatalogue, generateReview } = await import("./anthropic.server");
+    const { expandLemReview, generateLemCatalogue, generateLemReview } = await import("./anthropic.server");
 
-    const { data: existing } = await supabase.from("books").select("title").eq("featured", true);
-    const entries = await generateLemCatalogue((existing ?? []).map((b) => b.title));
+    const { data: allTitles } = await supabase.from("books").select("title");
+    const entries = await generateLemCatalogue((allTitles ?? []).map((b) => b.title), 16);
 
     const names = [...new Set(entries.map((e) => e.publisher_name))];
     const { data: known } = await supabase.from("publishers").select("id, name").in("name", names);
@@ -136,22 +136,17 @@ export const addLemShelf = createServerFn({ method: "POST" })
       for (const p of created ?? []) publisherIds.set(p.name, p.id);
     }
 
-    const reviews = await Promise.all(
-      entries.map((e) =>
-        generateReview(
-          {
-            title: e.title,
-            author: e.author,
-            kind: e.kind,
-            year: e.year,
-            pages: e.pages,
-            department: e.department,
-            publisher: { name: e.publisher_name, city: e.publisher_city, style_note: e.publisher_note },
-          },
-          "deep",
-        ).catch(() => null),
-      ),
-    );
+    const reviews = await Promise.all(entries.map(async (entry) => {
+      try {
+        const review = await generateLemReview(entry, entries);
+        return review.trim().split(/\s+/).length < 400 ? await expandLemReview(entry, review) : review;
+      } catch {
+        return null;
+      }
+    }));
+
+    const { error: clearErr } = await supabase.from("books").update({ featured: false }).eq("featured", true);
+    if (clearErr) throw new Error(clearErr.message);
 
     const { error: insertErr } = await supabase.from("books").insert(
       entries.map((e, i) => ({
@@ -164,11 +159,95 @@ export const addLemShelf = createServerFn({ method: "POST" })
         department: (isDepartment(e.department) ? e.department : "novels") as Database["public"]["Enums"]["department"],
         spine_color: e.spine_color,
         review: reviews[i] ?? null,
+        reviewer_name: e.reviewer_name,
         featured: true,
       })),
     );
     if (insertErr) throw new Error(insertErr.message);
     return { added: entries.length };
+  });
+
+/** Replaces the Hall's immediate-reading shelf with sixteen narrative books. */
+export const replaceReadingRoomShelf = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { supabase } = context;
+    const { generateReadingRoomCatalogue, generateReadingRoomReview } = await import("./anthropic.server");
+    const { data: allTitles } = await supabase.from("books").select("title");
+    const entries = await generateReadingRoomCatalogue((allTitles ?? []).map((b) => b.title));
+
+    const names = [...new Set(entries.map((e) => e.publisher_name))];
+    const { data: known } = await supabase.from("publishers").select("id, name").in("name", names);
+    const publisherIds = new Map((known ?? []).map((p) => [p.name, p.id]));
+    const uniqueMissing = [...new Map(entries.filter((e) => !publisherIds.has(e.publisher_name)).map((e) => [e.publisher_name, e])).values()];
+    if (uniqueMissing.length) {
+      const { data: created, error } = await supabase
+        .from("publishers")
+        .insert(uniqueMissing.map((e) => ({ name: e.publisher_name, city: e.publisher_city, style_note: e.publisher_note })))
+        .select("id, name");
+      if (error) throw new Error(error.message);
+      for (const publisher of created ?? []) publisherIds.set(publisher.name, publisher.id);
+    }
+
+    const reviews = await Promise.all(entries.map((entry) => generateReadingRoomReview(entry).catch(() => null)));
+    const { error: clearErr } = await supabase.from("books").update({ shelf: null, narrative: false }).eq("shelf", "reading_room");
+    if (clearErr) throw new Error(clearErr.message);
+    const { error } = await supabase.from("books").insert(entries.map((entry, index) => ({
+      title: entry.title,
+      author: entry.author,
+      kind: entry.kind,
+      publisher_id: publisherIds.get(entry.publisher_name) ?? null,
+      year: entry.year,
+      pages: entry.pages,
+      department: (isDepartment(entry.department) ? entry.department : "novels") as Database["public"]["Enums"]["department"],
+      shelf: "reading_room",
+      spine_color: entry.spine_color,
+      review: reviews[index] ?? null,
+      narrative: true,
+    })));
+    if (error) throw new Error(error.message);
+    return { added: entries.length };
+  });
+
+/** Repairs only short Lem reviews after a model returns below the shelf's house length. */
+export const expandShortLemReviews = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { expandLemReview } = await import("./anthropic.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: books, error } = await supabaseAdmin
+      .from("books")
+      .select("id, title, author, kind, year, pages, department, spine_color, reviewer_name, review, publisher:publishers(name, city, style_note)")
+      .eq("featured", true);
+    if (error) throw new Error(error.message);
+    let written = 0;
+    let eligible = 0;
+    for (const book of books ?? []) {
+      const wordCount = book.review?.trim().split(/\s+/).length ?? 0;
+      if (!book.review || (wordCount >= 400 && wordCount <= 500)) continue;
+      eligible += 1;
+      const publisher = book.publisher as unknown as { name: string; city: string; style_note: string | null } | null;
+      const review = await expandLemReview({
+        title: book.title,
+        author: book.author,
+        kind: book.kind,
+        year: book.year,
+        pages: book.pages,
+        department: book.department,
+        spine_color: book.spine_color,
+        publisher_name: publisher?.name ?? "Vacant Press",
+        publisher_city: publisher?.city ?? "Kraków",
+        publisher_note: publisher?.style_note ?? "",
+        reviewer_name: book.reviewer_name ?? "Mara Venn",
+        theme: "failed_contact",
+      }, book.review);
+      const { error: updateError } = await supabaseAdmin.from("books").update({ review }).eq("id", book.id);
+      if (updateError) throw new Error(updateError.message);
+      written += 1;
+    }
+    return { written, eligible, found: books?.length ?? 0 };
   });
 
 /** Writes reviews for any books that are missing one. */

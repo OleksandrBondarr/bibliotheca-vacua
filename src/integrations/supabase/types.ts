@@ -45,10 +45,12 @@ export type Database = {
           kept_at: string | null
           kept_by_name: string | null
           kind: string
+          narrative: boolean
           pages: number
           private_for: string | null
           publisher_id: string | null
           review: string | null
+          reviewer_name: string | null
           shelf: string | null
           shelf_mark: string
           spine_color: string
@@ -65,10 +67,12 @@ export type Database = {
           kept_at?: string | null
           kept_by_name?: string | null
           kind: string
+          narrative?: boolean
           pages: number
           private_for?: string | null
           publisher_id?: string | null
           review?: string | null
+          reviewer_name?: string | null
           shelf?: string | null
           shelf_mark?: string
           spine_color?: string
@@ -85,10 +89,12 @@ export type Database = {
           kept_at?: string | null
           kept_by_name?: string | null
           kind?: string
+          narrative?: boolean
           pages?: number
           private_for?: string | null
           publisher_id?: string | null
           review?: string | null
+          reviewer_name?: string | null
           shelf?: string | null
           shelf_mark?: string
           spine_color?: string

@@ -10,6 +10,7 @@ import { HeldShelf } from "@/components/library/HeldShelf";
 import { DepartmentShelf, Shelf } from "@/components/library/Shelf";
 import { departmentLabel } from "@/lib/departments";
 import type { VitrineTheme } from "@/components/library/Shelf";
+import { playLampClick, setSoundEnabled, soundEnabled, startAmbience } from "@/lib/library-sound";
 
 const LEM_VITRINE_THEME: VitrineTheme = {
   labelLines: {
@@ -41,22 +42,28 @@ function DrawerFace({ label, note }: { label?: string; note?: string }) {
 }
 
 /** A brass reading lamp with a pull switch: after closing, only its pool of light remains. */
-function ReadingLamp({ closed, onPull }: { closed: boolean; onPull: () => void }) {
+function ReadingLamp({ closed, sound, onPull, onSound }: { closed: boolean; sound: boolean; onPull: () => void; onSound: () => void }) {
   return (
-    <button
-      type="button"
-      onClick={onPull}
-      aria-pressed={closed}
-      aria-label={closed ? "Open the library again" : "After closing: dim the library"}
-      title={closed ? "Open the library again" : "After closing"}
-      className="reading-lamp"
-    >
-      <span aria-hidden className="pool" />
-      <span aria-hidden className="shade" />
-      <span aria-hidden className="pull" />
-      <span aria-hidden className="stem" />
-      <span aria-hidden className="foot" />
-    </button>
+    <div className="lamp-controls">
+      <button
+        type="button"
+        onClick={onPull}
+        aria-pressed={closed}
+        aria-label={closed ? "Switch the library lights on" : "Switch the library lights off"}
+        title={closed ? "Lights on" : "After closing"}
+        className="reading-lamp"
+      >
+        <span aria-hidden className="lamp-pool" />
+        <span aria-hidden className="lamp-shade" />
+        <span aria-hidden className="lamp-rim" />
+        <span aria-hidden className="lamp-chain" />
+        <span aria-hidden className="lamp-column" />
+        <span aria-hidden className="lamp-foot" />
+      </button>
+      <button type="button" className="sound-toggle" aria-pressed={sound} onClick={onSound}>
+        {sound ? "sound" : "quiet"}
+      </button>
+    </div>
   );
 }
 
@@ -90,19 +97,31 @@ export const Route = createFileRoute("/")({
 function Hall() {
   const { data } = useSuspenseQuery(hallQuery);
   const [closed, setClosed] = useState(false);
+  const [sound, setSound] = useState(false);
   useEffect(() => {
     setClosed(window.localStorage.getItem("bv-after-closing") === "1");
+    const enabled = soundEnabled();
+    setSound(enabled);
+    if (enabled) startAmbience();
   }, []);
   function pull() {
+    playLampClick();
     setClosed((was) => {
       const next = !was;
       window.localStorage.setItem("bv-after-closing", next ? "1" : "0");
       return next;
     });
   }
+  function toggleSound() {
+    const next = !sound;
+    setSound(next);
+    setSoundEnabled(next);
+  }
 
   return (
-    <Frame env="hall">
+    <Frame env="hall" className="hall-main">
+      <div aria-hidden className="hall-depth" />
+      <div aria-hidden className={closed ? "lights-out-layer active" : "lights-out-layer"} />
       <div className={closed ? "hall-closed" : undefined}>
       <section className="relative pt-16 pb-12 text-center">
         <div aria-hidden className="dust">
@@ -135,6 +154,14 @@ function Hall() {
           vitrine
           vitrineTheme={LEM_VITRINE_THEME}
         />
+      </section>
+
+      <section aria-labelledby="reading-room-shelf" className="mb-14">
+        <div className="mb-3 px-1">
+          <h2 id="reading-room-shelf" className="text-xl">The Reading Room</h2>
+          <p className="mt-1 text-sm italic text-muted-foreground">Books to be read from the first page to the last.</p>
+        </div>
+        <Shelf books={data.readingRoom} empty="The shelf is being assembled." />
       </section>
 
       <section aria-labelledby="departments" className="mb-14">
@@ -182,7 +209,7 @@ function Hall() {
         ))}
       </section>
       </div>
-      <ReadingLamp closed={closed} onPull={pull} />
+      <ReadingLamp closed={closed} sound={sound} onPull={pull} onSound={toggleSound} />
     </Frame>
   );
 }

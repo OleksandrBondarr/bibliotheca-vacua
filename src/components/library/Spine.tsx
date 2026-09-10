@@ -6,6 +6,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { houseHash as publisherHash } from "@/lib/binding";
 import { cn } from "@/lib/utils";
 import { readingHint } from "@/lib/reading-time";
+import { readingGuidance } from "@/lib/reading-guidance";
 
 function firstSentences(text: string | null, count = 2) {
   if (!text) return null;
@@ -26,11 +27,14 @@ function imprint(book: SpineBook) {
 /** The paper catalogue card shown on hover (desktop) or in the bottom sheet (phone). */
 function CatalogueCard({ book, hideCue }: { book: SpineBook; hideCue?: boolean }) {
   const snippet = firstSentences(book.review);
+  const guidance = readingGuidance(book);
   return (
     <div className="bg-paper p-4 text-ink">
       <p className="text-lg leading-snug">{book.title}</p>
       <p className="mt-0.5 text-[15px] text-ink">{book.author}</p>
       <p className="mt-2 text-[15px] leading-snug text-ink-soft">{imprint(book)}</p>
+      <p className="mt-2 text-small-caps text-[15px] text-ink">{guidance.label}</p>
+      {guidance.note && <p className="text-[15px] italic text-ink-soft">{guidance.note}</p>}
       <div className="my-3 h-px bg-rule" />
       {snippet ? (
         <p className="text-[15px] leading-relaxed text-ink">{snippet}</p>
@@ -40,6 +44,7 @@ function CatalogueCard({ book, hideCue }: { book: SpineBook; hideCue?: boolean }
       {book.status === "taken_forever" && (
         <p className="mt-3 text-small-caps text-[15px] text-stamp">Taken forever</p>
       )}
+      {book.reviewer_name && <p className="mt-3 text-[15px] italic text-ink-soft">Reviewed by {book.reviewer_name}</p>}
       {!hideCue && <p className="mt-3 text-[15px] text-ink-soft">Open the card →</p>}
     </div>
   );
@@ -244,7 +249,7 @@ export function Spine({ book, onLoan = false, setAside = false }: { book: SpineB
   }, [hover]);
 
   function openHover() {
-    if (isMobile) return;
+    if (isMobile || window.matchMedia("(hover: none), (pointer: coarse)").matches) return;
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => {
       const r = ref.current?.getBoundingClientRect();
@@ -357,7 +362,7 @@ export function Spine({ book, onLoan = false, setAside = false }: { book: SpineB
          document.body,
       )}
 
-      {sheet && isMobile && (
+      {sheet && isMobile && createPortal(
         <>
           <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setSheet(false)} aria-hidden />
           <div
@@ -377,7 +382,8 @@ export function Spine({ book, onLoan = false, setAside = false }: { book: SpineB
               </Link>
             </div>
           </div>
-        </>
+        </>,
+        document.body,
       )}
     </div>
   );

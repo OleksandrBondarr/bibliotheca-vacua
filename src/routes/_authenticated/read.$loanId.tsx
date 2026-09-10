@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { getLoan, requestKeep, returnBook, setBookmark, turnToPage, type LoanView } from "@/lib/loans.functions";
 import { Frame, Prose, buttonLink, buttonPrimary, buttonQuiet } from "@/components/library/Frame";
 import { ShareLine } from "@/components/library/Share";
+import { playPageTurn } from "@/lib/library-sound";
 
 export const Route = createFileRoute("/_authenticated/read/$loanId")({
   head: () => ({
@@ -24,10 +25,10 @@ function daysLeft(iso: string) {
   return Math.max(0, Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000));
 }
 
-function PageImprint({ reader, page }: { reader: string; page: number }) {
+function PageImprint({ reader, page, total }: { reader: string; page: number; total: number }) {
   return (
     <p className="mt-8 border-t border-border/70 pt-3 text-center text-[15px] text-muted-foreground">
-      Written for {reader} · p. {page} · Bibliotheca Vacua
+      Written for {reader} · p. {page} of {total} · Bibliotheca Vacua
     </p>
   );
 }
@@ -164,7 +165,7 @@ function ReadingRoom() {
             <Prose text={loan.text} dropCap={loan.currentPage === 1} className="text-[18px] leading-[1.7]" />
           )}
         </article>
-        {!atEnd && <PageImprint reader={loan.readerName} page={loan.currentPage} />}
+        {!atEnd && <PageImprint reader={loan.readerName} page={loan.currentPage} total={total} />}
 
         {turning.error && <p className="mt-6 text-center text-sm text-destructive">{turning.error.message}</p>}
 
@@ -173,7 +174,10 @@ function ReadingRoom() {
             <button
               type="button"
               disabled={busy}
-              onClick={() => turning.mutate(loan.text === null ? 1 : loan.currentPage + 1)}
+              onClick={() => {
+                playPageTurn();
+                turning.mutate(loan.text === null ? 1 : loan.currentPage + 1);
+              }}
               className={buttonPrimary}
             >
               {busy ? "The page is being written…" : loan.text === null ? "Open the book" : "Next page"}
@@ -270,7 +274,7 @@ function ReadingRoom() {
               {gift && <p className="text-sm italic text-muted-foreground">Gifts will be possible soon.</p>}
             </div>
             {cardUrl && <ShareLine url={cardUrl} title={`I read it and let it go: ${loan.book.title} — ${loan.book.author}`} />}
-            <PageImprint reader={loan.readerName} page={loan.currentPage} />
+            <PageImprint reader={loan.readerName} page={loan.currentPage} total={total} />
           </section>
         )}
       </div>

@@ -86,13 +86,14 @@ export function Frame({
       <header className={cn("relative z-50 mx-auto px-5 pt-5 pb-2", narrow ? "max-w-[560px]" : "max-w-5xl")}>
         <div className="flex items-baseline justify-between gap-4">
           <Link to="/" className="text-small-caps min-w-0 truncate text-sm tracking-widest text-muted-foreground hover:text-foreground">
-            Bibliotheca Vacua
+            <span className="sm:hidden">BV</span>
+            <span className="hidden sm:inline">Bibliotheca Vacua</span>
             {env === "hall" && night && <span className="ml-2 italic tracking-normal">· Night shift</span>}
           </Link>
           <div className="flex shrink-0 items-baseline gap-4">
             <Link
               to={session ? "/card" : "/auth"}
-              className="text-small-caps max-w-[9rem] truncate text-sm tracking-widest text-muted-foreground hover:text-foreground"
+              className="text-small-caps hidden max-w-[9rem] truncate text-sm tracking-widest text-muted-foreground hover:text-foreground sm:block"
             >
               {readerName ?? "Reader's card"}
             </Link>
@@ -131,6 +132,11 @@ export function Frame({
                 </button>
               </div>
               <div>
+                {session && readerName && (
+                  <p className="mb-4 border-b border-[oklch(0.34_0.02_120)] pb-4 text-[17px] text-hall-foreground">
+                    {readerName}
+                  </p>
+                )}
                 <p className="text-small-caps text-[15px] tracking-widest text-hall-foreground/60 sm:text-xs">Departments</p>
                 {DEPARTMENTS.map((d) => (
                   <Link key={d.slug} to="/department/$slug" params={{ slug: d.slug }} className={item} onClick={() => setOpen(false)}>

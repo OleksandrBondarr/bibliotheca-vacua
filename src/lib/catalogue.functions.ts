@@ -15,6 +15,8 @@ export type SpineBook = {
   department: string;
   shelf: string | null;
   featured: boolean;
+  narrative: boolean;
+  reviewer_name: string | null;
   kind: string;
   year: number;
   review: string | null;
@@ -38,7 +40,7 @@ export type TakenBook = {
 };
 
 const SPINE_COLUMNS =
-  "id, title, author, pages, spine_color, status, department, shelf, featured, kind, year, review, shelf_mark, publisher:publishers(id, name, city, style_note)";
+  "id, title, author, pages, spine_color, status, department, shelf, featured, narrative, reviewer_name, kind, year, review, shelf_mark, publisher:publishers(id, name, city, style_note)";
 
 
 export const getHall = createServerFn({ method: "GET" }).handler(async () => {
@@ -47,16 +49,18 @@ export const getHall = createServerFn({ method: "GET" }).handler(async () => {
 
   const deptSlugs = DEPARTMENTS.map((d) => d.slug);
 
-  const [total, taken, arrivals, featured, ...deptResults] = await Promise.all([
+  const [total, taken, arrivals, featured, readingRoom, ...deptResults] = await Promise.all([
     db.from("books").select("id", { count: "exact", head: true }),
     db.from("books").select("id", { count: "exact", head: true }).eq("status", "taken_forever"),
     db
       .from("books")
       .select(SPINE_COLUMNS)
       .eq("featured", false)
+      .or("shelf.is.null,shelf.neq.reading_room")
       .order("created_at", { ascending: false })
       .limit(18),
     db.from("books").select(SPINE_COLUMNS).eq("featured", true).order("created_at", { ascending: true }),
+    db.from("books").select(SPINE_COLUMNS).eq("shelf", "reading_room").order("created_at", { ascending: true }),
     ...deptSlugs.map((slug) =>
       db
         .from("books")
@@ -92,6 +96,7 @@ export const getHall = createServerFn({ method: "GET" }).handler(async () => {
     takenForever: taken.count ?? 0,
     arrivals: (arrivals.data ?? []) as SpineBook[],
     featured: (featured.data ?? []) as SpineBook[],
+    readingRoom: (readingRoom.data ?? []) as SpineBook[],
     departments,
   };
 });
