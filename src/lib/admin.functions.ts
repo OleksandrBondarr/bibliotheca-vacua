@@ -223,8 +223,10 @@ export const expandShortLemReviews = createServerFn({ method: "POST" })
       .eq("featured", true);
     if (error) throw new Error(error.message);
     let written = 0;
+    let eligible = 0;
     for (const book of books ?? []) {
       if (!book.review || book.review.trim().split(/\s+/).length >= 400) continue;
+      eligible += 1;
       const publisher = book.publisher as unknown as { name: string; city: string; style_note: string | null } | null;
       const review = await expandLemReview({
         title: book.title,
@@ -241,9 +243,10 @@ export const expandShortLemReviews = createServerFn({ method: "POST" })
         theme: "failed_contact",
       }, book.review);
       const { error: updateError } = await supabaseAdmin.from("books").update({ review }).eq("id", book.id);
-      if (!updateError) written += 1;
+      if (updateError) throw new Error(updateError.message);
+      written += 1;
     }
-    return { written };
+    return { written, eligible, found: books?.length ?? 0 };
   });
 
 /** Writes reviews for any books that are missing one. */
