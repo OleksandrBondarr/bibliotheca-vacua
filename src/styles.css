@@ -516,8 +516,12 @@
     scroll-behavior: auto !important;
   }
   .lights-out-layer {
-    background: oklch(0.025 0.004 155 / 94%);
+    background: oklch(0.06 0.01 155 / 72%);
   }
+  .paper .lights-out-layer {
+    background: oklch(0.16 0.015 150 / 34%);
+  }
+
 }
 
 /* Shelves scroll sideways; scrollbar space never changes the shelf geometry. */
