@@ -216,7 +216,8 @@ export const expandShortLemReviews = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     await assertAdmin(context);
     const { expandLemReview } = await import("./anthropic.server");
-    const { data: books, error } = await context.supabase
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: books, error } = await supabaseAdmin
       .from("books")
       .select("id, title, author, kind, year, pages, department, spine_color, reviewer_name, review, publisher:publishers(name, city, style_note)")
       .eq("featured", true);
@@ -239,7 +240,7 @@ export const expandShortLemReviews = createServerFn({ method: "POST" })
         reviewer_name: book.reviewer_name ?? "Mara Venn",
         theme: "failed_contact",
       }, book.review);
-      const { error: updateError } = await context.supabase.from("books").update({ review }).eq("id", book.id);
+      const { error: updateError } = await supabaseAdmin.from("books").update({ review }).eq("id", book.id);
       if (!updateError) written += 1;
     }
     return { written };

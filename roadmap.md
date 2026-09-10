@@ -7,4 +7,4 @@
 - [x] Rebuild the banker lamp and add Hall depth.
 - [x] Add opt-in lazy audio under 1 MB with source attribution.
 - [x] Replace the default favicon with the blank brass-spine SVG/PNG icon set and web manifest.
-- [ ] Verify database content, mobile/desktop layouts, interactions, and metadata.
+- [x] Verify database content, mobile/desktop layouts, interactions, and metadata.
