@@ -61,7 +61,7 @@ export function HeldShelf({ heading = true, className }: { heading?: boolean; cl
             <p className="text-sm text-muted-foreground">{b.author}</p>
             <p className="mt-1 text-xs text-muted-foreground">
               {b.kind} · {b.publisher?.name ?? "—"}
-              {b.publisher?.city ? `, ${b.publisher.city}` : ""} · {b.year} · {b.pages} pp ·{" "}
+              {b.publisher?.city ? `, ${b.publisher.city}` : ""} · {b.year} ·{" "}
               {departmentLabel(b.department)}
             </p>
             {b.review && <p className="mt-3 text-[15px] leading-relaxed">{firstSentences(b.review)}</p>}

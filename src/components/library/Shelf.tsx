@@ -78,6 +78,7 @@ export function Shelf({
           ref={scroller}
           className={cn(
             "shelf-scroll shelf-bed flex items-end gap-[3px] px-4 pt-3",
+            vitrineTheme && "gap-x-[5px] pl-5",
             books.length > 0 && "h-[232px]",
           )}
         >

@@ -6,6 +6,8 @@ import { z } from "zod";
 import { bookQuery } from "@/lib/catalogue.functions";
 import { getPrivateBook } from "@/lib/reader.functions";
 import { readingHint } from "@/lib/reading-time";
+import { readingGuidance } from "@/lib/reading-guidance";
+import { playStamp } from "@/lib/library-sound";
 import { getRequestOrigin } from "@/lib/origin.functions";
 import { ShareLine } from "@/components/library/Share";
 import { ReviewEnd } from "@/components/library/ReviewEnd";
@@ -104,6 +106,7 @@ function BookPage() {
 
   const restricted = book.department === "restricted";
   const taken = book.status === "taken_forever";
+  const guidance = readingGuidance(book);
 
   async function handleTakeOut() {
     if (!book) return;
@@ -115,6 +118,7 @@ function BookPage() {
     setError(null);
     try {
       const res = await takeOut({ data: { bookId: book.id } });
+      playStamp();
       navigate({ to: "/read/$loanId", params: { loanId: res.loanId } });
     } catch (e) {
       if (e instanceof Error && e.message.includes(NAME_REQUIRED)) {
@@ -157,6 +161,8 @@ function BookPage() {
               </>
             )}{" "}· {book.year} · {readingHint(book.pages)} · Shelf mark {book.shelf_mark}
           </p>
+          <p className="mt-2 text-small-caps text-sm text-muted-foreground">{guidance.label}</p>
+          {guidance.note && <p className="text-[15px] italic text-muted-foreground">{guidance.note}</p>}
         </div>
       </header>
 
@@ -165,6 +171,7 @@ function BookPage() {
       {book.review ? (
         <>
           <Prose text={book.review} />
+          {book.reviewer_name && <p className="mt-5 text-right text-[15px] italic text-muted-foreground">— {book.reviewer_name}</p>}
           <ReviewEnd bookId={book.id} department={book.department} />
         </>
 

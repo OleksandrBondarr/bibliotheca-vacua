@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { addLemShelf, addShelf, fillMissingReviews, getShelfCounts, rewriteReviewBatch } from "@/lib/admin.functions";
+import { addLemShelf, addShelf, fillMissingReviews, getShelfCounts, replaceReadingRoomShelf, rewriteReviewBatch } from "@/lib/admin.functions";
 import { DEPARTMENTS } from "@/lib/departments";
 import { Frame, Rule, buttonPrimary, buttonQuiet } from "@/components/library/Frame";
 
@@ -25,6 +25,7 @@ function AdminPage() {
   const counts = useServerFn(getShelfCounts);
   const shelf = useServerFn(addShelf);
   const lem = useServerFn(addLemShelf);
+  const readingRoom = useServerFn(replaceReadingRoomShelf);
   const fill = useServerFn(fillMissingReviews);
   const rewrite = useServerFn(rewriteReviewBatch);
   const [log, setLog] = useState<string[]>([]);
@@ -68,11 +69,23 @@ function AdminPage() {
 
   const addLem = useMutation({
     mutationFn: async () => {
-      note("Assembling the Lem-neighbourhood shelf…");
+      note("Replacing the Lem-neighbourhood shelf…");
       return lem();
     },
     onSuccess: (r) => {
-      note(`Lem shelf: ${r.added} featured books added.`);
+      note(`Lem shelf replaced with ${r.added} books.`);
+      refresh();
+    },
+    onError: (e) => note(`Failed: ${e.message}`),
+  });
+
+  const addReadingRoom = useMutation({
+    mutationFn: async () => {
+      note("Assembling The Reading Room…");
+      return readingRoom();
+    },
+    onSuccess: (r) => {
+      note(`The Reading Room replaced with ${r.added} books.`);
       refresh();
     },
     onError: (e) => note(`Failed: ${e.message}`),
@@ -106,7 +119,7 @@ function AdminPage() {
   });
 
   const busy =
-    seed.isPending || addOne.isPending || addLem.isPending || fillReviews.isPending || rewriteAll.isPending;
+    seed.isPending || addOne.isPending || addLem.isPending || addReadingRoom.isPending || fillReviews.isPending || rewriteAll.isPending;
 
   return (
     <Frame env="paper" narrow>
@@ -137,7 +150,10 @@ function AdminPage() {
               {seed.isPending ? "Seeding…" : "Seed catalogue (fill thin departments)"}
             </button>
             <button type="button" disabled={busy} onClick={() => addLem.mutate()} className={buttonQuiet}>
-              {addLem.isPending ? "Assembling…" : "Add the Lem-neighbourhood shelf"}
+              {addLem.isPending ? "Assembling…" : "Replace the Lem-neighbourhood shelf"}
+            </button>
+            <button type="button" disabled={busy} onClick={() => addReadingRoom.mutate()} className={buttonQuiet}>
+              {addReadingRoom.isPending ? "Assembling…" : "Replace The Reading Room shelf"}
             </button>
             <button
               type="button"

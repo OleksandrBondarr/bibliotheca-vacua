@@ -188,13 +188,12 @@ export async function renderBookOg(book: OgBook) {
     book.kind,
     book.publisher ? `${book.publisher.name}, ${book.publisher.city}` : null,
     String(book.year),
-    `${book.pages} pages`,
   ]
     .filter(Boolean)
     .join(" · ");
 
   const style = bindingStyle(book.publisher?.name ?? null);
-  const shelf = 200 + ((book.pages * 31) % 8800);
+  const shelf = 200 + ((book.title.length * 31 + book.year) % 8800);
   const title = book.title.length > 84 ? `${book.title.slice(0, 82)}…` : book.title;
 
   return toPng(

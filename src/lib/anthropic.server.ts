@@ -155,6 +155,7 @@ export type BookForPrompt = {
   pages: number;
   department: string;
   shelf?: string | null;
+  narrative?: boolean;
   publisher?: { name: string; city: string; style_note: string | null } | null;
 };
 
@@ -212,17 +213,30 @@ Output the paragraphs only.`;
 /* The Lem-neighbourhood shelf                                         */
 /* ------------------------------------------------------------------ */
 
-export type LemEntry = CatalogueEntry & { department: string };
+export type LemEntry = CatalogueEntry & {
+  department: string;
+  reviewer_name: string;
+  theme: "books_about_books" | "failed_contact" | "institutions" | "comedy" | "machine_minds";
+};
 
-export async function generateLemCatalogue(existingTitles: string[], count = 14): Promise<LemEntry[]> {
-  const system = `You are the chief cataloguer of the Bibliotheca Vacua, an old and serious library. You are assembling a commemorative shelf of books that live in the intellectual neighbourhood of a certain twentieth-century philosophical writer of speculative fiction. You must NOT name him, quote him, or use any of his titles, characters, places, or coinages. Nobody reading the entries should be able to point to a borrowed name. The books develop and reinterpret his themes with their own inventions: contact without understanding; technology as fate; machines that author; phantom worlds and simulated persons; the limits of translation between minds; the comedy of reason facing what it cannot digest. Invented authors and publishers only. Never use real people, real publishers, or real books. Never mention that anything is invented. Return strict JSON only.`;
+export async function generateLemCatalogue(existingTitles: string[], count = 16): Promise<LemEntry[]> {
+  const system = `You are the chief cataloguer of the Bibliotheca Vacua. Assemble a commemorative shelf for readers who love rigorous philosophical speculative fiction: continue its way of thinking without imitation. NEVER name Stanisław Lem inside a book or review; never borrow his titles, characters, names, coinages or quotations. Invent authors, publishers, reviewers, colleagues and scholarly disputes. The shelf must be intellectually exact but not solemn: deadpan comedy matters. Return strict JSON only.`;
 
-  const user = `Produce exactly ${count} books as a JSON array, spread across the departments "novels", "poetry", "treatises", "memoirs", "reference" (at least two per department; none in "restricted"). Each element:
+  const user = `Produce exactly ${count} books as a JSON array. The distribution is exact:
+- 4 "books_about_books": reviews or prefaces to nonexistent works, with scholarly apparatus, footnote polemics and disputes with invented colleagues;
+- 4 "failed_contact": contact where the other is neither hostile nor friendly but untranslatable, and an answer arrives to a question nobody asked;
+- 3 "institutions": absurd bureaux, commissions or academies that study what does not exist and produce documents instead of meaning;
+- 3 "comedy": genuinely funny deadpan fables or absurd chronicles told in a perfectly serious voice;
+- 2 "machine_minds": thinking machines, free will, and whether the made can be distinguished from the born.
+
+Spread them across "novels", "poetry", "treatises", "memoirs", "reference"; none restricted. Each element:
 {
   "title": string (distinctive, unhurried),
   "author": string (invented; vary nationalities widely: Polish, Estonian, Nigerian, Uruguayan, Korean, Welsh, Persian, Finnish, Lebanese, Peruvian, Czech...),
   "kind": string (e.g. "Novel", "Treatise", "Monograph", "Poems", "Memoir", "Dictionary", "Gazetteer", "Proceedings"),
   "department": one of "novels" | "poetry" | "treatises" | "memoirs" | "reference",
+  "theme": one of "books_about_books" | "failed_contact" | "institutions" | "comedy" | "machine_minds",
+  "reviewer_name": string (a memorable invented critic; use 5–8 reviewers across the shelf so they can argue with one another),
   "publisher_name": string (invented small press; reuse a name for 2–3 books),
   "publisher_city": string,
   "publisher_note": string (one sentence on the house's character and typography),
@@ -240,11 +254,53 @@ Output the JSON array and nothing else.`;
     .map((e) => ({
       ...e,
       department: ["novels", "poetry", "treatises", "memoirs", "reference"].includes(e.department) ? e.department : "novels",
+      theme: ["books_about_books", "failed_contact", "institutions", "comedy", "machine_minds"].includes(e.theme) ? e.theme : "failed_contact",
+      reviewer_name: String(e.reviewer_name || "Mara Venn"),
       year: clamp(Math.round(Number(e.year) || 1990), 1958, 2071),
       pages: clamp(Math.round(Number(e.pages) || 200), 64, 420),
       spine_color: /^#[0-9a-f]{6}$/i.test(e.spine_color ?? "") ? e.spine_color : "#5a4a3a",
       kind: e.kind || "Book",
     }));
+}
+
+export async function generateLemReview(book: LemEntry, shelf: LemEntry[]): Promise<string> {
+  const neighbours = shelf
+    .filter((entry) => entry.title !== book.title)
+    .map((entry) => `“${entry.title}” reviewed by ${entry.reviewer_name}`)
+    .join("; ");
+  const system = `You are ${book.reviewer_name}, an invented critic writing a catalogue review. You have a distinct, calm, exact and faintly comic voice. The review must make a demanding reader want the book. Never name Stanisław Lem, quote him, or borrow his titles, characters, names or coinages. Never use real people, publishers, institutions or books. Never hint that anything is invented.`;
+  const user = `Review “${book.title}” by ${book.author}, a ${book.kind} published by ${book.publisher_name} of ${book.publisher_city} in ${book.year}.
+
+Write 400–500 words in 4 paragraphs, no heading or list. Open with one concrete strange detail from inside the work. Include its apparatus, ideas and comedy where apt. Raise exactly one unanswered question. Mention one famous passage without quoting it. Withhold the ending. Name yourself nowhere in the prose.
+
+The critics on this shelf know and dispute one another. Take issue, naturally and specifically, with ONE colleague’s reading of a different title from this list: ${neighbours}. Do not claim to quote that review. End with one usable way of seeing rather than a moral. Output only the review.`;
+  return askClaude(system, user, 1800);
+}
+
+export type ReadingRoomEntry = CatalogueEntry & { department: string };
+
+export async function generateReadingRoomCatalogue(existingTitles: string[]): Promise<ReadingRoomEntry[]> {
+  const system = `You catalogue an irresistible shelf of popular fiction for Bibliotheca Vacua. Invent authors and publishers only. Never use real people, publishers or books. These books grip rather than lecture: scenes, dialogue, movement, emotional clarity and genre pleasure. Return strict JSON only.`;
+  const user = `Create exactly 16 books, spread across cosy fantasy, healing fiction in cafés/night shops/small kindnesses, cosy mystery, dark academia, folk horror, hopeful climate fiction, quiet family novel, adventure, historical mystery, romance with a rival, and thriller with an unreliable narrator.
+
+Each object has: "title" (1–4 words, concrete, no colon, no subtitle), "author", "kind", "department" (novels, poetry or memoirs), "publisher_name", "publisher_city", "publisher_note", "year" (1958–2071), "pages" (90–360), "spine_color" (muted hex).
+Avoid: ${existingTitles.slice(0, 80).join("; ") || "none"}. Output JSON only.`;
+  const entries = extractJson<ReadingRoomEntry[]>(await askClaude(system, user, 6000));
+  return entries.filter((e) => e?.title && e?.author).slice(0, 16).map((e) => ({
+    ...e,
+    title: shortTitle(e.title).split(/\s+/).slice(0, 4).join(" "),
+    department: ["novels", "poetry", "memoirs"].includes(e.department) ? e.department : "novels",
+    year: clamp(Math.round(Number(e.year) || 2005), 1958, 2071),
+    pages: clamp(Math.round(Number(e.pages) || 220), 90, 360),
+    spine_color: /^#[0-9a-f]{6}$/i.test(e.spine_color ?? "") ? e.spine_color : "#405948",
+    kind: e.kind || "Novel",
+  }));
+}
+
+export async function generateReadingRoomReview(book: ReadingRoomEntry): Promise<string> {
+  const system = `You write plain, inviting catalogue copy for popular fiction. Clear short sentences. No academic vocabulary, no literary-review performance, no headings, no lists. Never name real people or books, and never hint that the book is invented.`;
+  const user = `Write 200–260 words in 3 short paragraphs for “${book.title}” by ${book.author} (${book.kind}, ${book.year}). Open with one strange concrete detail from the story, never a judgement. Then say plainly what kind of book it is and who it is for. Raise exactly one question and refuse to answer it. Name one passage by where it occurs and what happens there, but do not quote it. Refer to the ending without revealing it. Scenes, people and stakes matter more than ideas. Output only the review.`;
+  return askClaude(system, user, 1000);
 }
 
 /* ------------------------------------------------------------------ */
@@ -271,7 +327,11 @@ export async function generatePage(args: {
       ? ` This book was published in ${book.year} and belongs to the shelf of sciences not yet made: concepts and arguments, never invented data. No numeric results, datasets, measurements, dosages or efficacy figures; nothing touching real diseases, real drugs, or real medical or safety matters; no real scientists, institutions or journals.`
       : "";
 
-  const system = `You are the text of a book. You write exactly one page at a time, in the real voice of the book's genre and author, as it would appear in print. No headings, no page numbers, no summaries, no framing, no commentary, no notes to the reader. Never mention that the book is being written or is invented. Never refer to real people. Continue seamlessly from what came before. Unless this is the final page, the page ends mid-flow, in the middle of a paragraph or even a sentence, as a printed page does.${notYet}`;
+  const narrative = book.narrative
+    ? " This is popular narrative fiction: write scenes, dialogue and movement in a confident genre voice. Use short clear sentences. Put a hook by the end of the first page. Never turn the page into an essay or abstract meditation."
+    : "";
+
+  const system = `You are the text of a book. You write exactly one page at a time, in the real voice of the book's genre and author, as it would appear in print. No headings, no page numbers, no summaries, no framing, no commentary, no notes to the reader. Never mention that the book is being written or is invented. Never refer to real people. Continue seamlessly from what came before. Unless this is the final page, the page ends mid-flow, in the middle of a paragraph or even a sentence, as a printed page does.${notYet}${narrative}`;
 
   const user = `Book: "${book.title}" by ${book.author} (${book.kind}, ${book.year}, ${book.pages} pages). Department: ${book.department}.
 

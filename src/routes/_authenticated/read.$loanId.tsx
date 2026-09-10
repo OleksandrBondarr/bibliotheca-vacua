@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { getLoan, requestKeep, returnBook, setBookmark, turnToPage, type LoanView } from "@/lib/loans.functions";
 import { Frame, Prose, buttonLink, buttonPrimary, buttonQuiet } from "@/components/library/Frame";
 import { ShareLine } from "@/components/library/Share";
+import { playPageTurn } from "@/lib/library-sound";
 
 export const Route = createFileRoute("/_authenticated/read/$loanId")({
   head: () => ({
@@ -173,7 +174,10 @@ function ReadingRoom() {
             <button
               type="button"
               disabled={busy}
-              onClick={() => turning.mutate(loan.text === null ? 1 : loan.currentPage + 1)}
+              onClick={() => {
+                playPageTurn();
+                turning.mutate(loan.text === null ? 1 : loan.currentPage + 1);
+              }}
               className={buttonPrimary}
             >
               {busy ? "The page is being written…" : loan.text === null ? "Open the book" : "Next page"}

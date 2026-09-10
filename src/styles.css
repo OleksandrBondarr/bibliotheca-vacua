@@ -581,48 +581,75 @@
   filter: none;
 }
 
-/* A small brass reading lamp with a pull switch */
-.reading-lamp {
+/* Banker's lamp and its controls: fixed clear of the reading column. */
+.lamp-controls {
   position: fixed;
-  right: 18px;
-  bottom: 18px;
-  z-index: 30;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  z-index: 70;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+}
+.reading-lamp {
+  position: relative;
+  display: block;
+  width: 62px;
+  height: 72px;
   background: none;
   border: 0;
   padding: 0;
   cursor: pointer;
 }
-.reading-lamp .shade {
-  width: 46px;
+.lamp-shade {
+  position: absolute;
+  left: 7px;
+  top: 6px;
+  width: 48px;
   height: 22px;
-  border-radius: 3px 3px 22px 22px;
-  background: linear-gradient(to bottom, oklch(0.78 0.11 84), var(--color-brass) 55%, oklch(0.55 0.07 74));
-  box-shadow: inset 0 1px 0 oklch(1 0 0 / 30%), 0 2px 5px oklch(0 0 0 / 45%);
+  border-radius: 24px 24px 5px 5px / 18px 18px 5px 5px;
+  background: linear-gradient(to bottom, oklch(0.52 0.09 154), oklch(0.29 0.065 154) 62%, oklch(0.19 0.04 154));
+  box-shadow: inset 0 2px 2px oklch(1 0 0 / 24%), inset 0 -2px 3px oklch(0 0 0 / 38%), 0 2px 5px oklch(0 0 0 / 48%);
 }
-.reading-lamp .stem {
-  width: 2px;
-  height: 26px;
+.lamp-rim {
+  position: absolute;
+  left: 5px;
+  top: 25px;
+  width: 52px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(to bottom, oklch(0.86 0.11 86), var(--color-brass), oklch(0.48 0.06 75));
+  box-shadow: 0 1px 0 oklch(0 0 0 / 45%);
+}
+.lamp-column {
+  position: absolute;
+  left: 30px;
+  top: 27px;
+  width: 3px;
+  height: 35px;
   background: linear-gradient(to bottom, var(--color-brass), oklch(0.45 0.05 74));
+  box-shadow: 1px 0 0 oklch(1 0 0 / 22%);
 }
-.reading-lamp .foot {
-  width: 30px;
-  height: 4px;
-  border-radius: 2px;
+.lamp-foot {
+  position: absolute;
+  left: 18px;
+  bottom: 5px;
+  width: 28px;
+  height: 6px;
+  border-radius: 50% 50% 3px 3px;
   background: linear-gradient(to bottom, var(--color-brass), oklch(0.4 0.045 74));
 }
-.reading-lamp .pull {
+.lamp-chain {
   position: absolute;
-  right: 6px;
-  top: 24px;
+  right: 8px;
+  top: 26px;
   width: 1px;
-  height: 20px;
+  height: 23px;
   background: oklch(0.72 0.1 80 / 70%);
+  transform-origin: top;
 }
-.reading-lamp .pull::after {
+.lamp-chain::after {
   content: "";
   position: absolute;
   bottom: -4px;
@@ -632,20 +659,68 @@
   border-radius: 9999px;
   background: var(--color-brass);
 }
-.reading-lamp .pool {
+.lamp-pool {
   position: absolute;
-  right: -40px;
-  bottom: -30px;
-  width: 200px;
-  height: 150px;
+  right: -20px;
+  top: 20px;
+  width: 110px;
+  height: 78px;
   pointer-events: none;
-  background: radial-gradient(60% 60% at 62% 30%, oklch(0.8 0.11 82 / 18%), transparent 72%);
-  opacity: 0;
+  background: radial-gradient(60% 54% at 50% 28%, oklch(0.77 0.105 128 / 22%), transparent 74%);
+  opacity: 0.45;
   transition: opacity 600ms ease;
 }
-.hall-closed .reading-lamp .pool {
+.hall-closed .lamp-pool {
   opacity: 1;
 }
+.sound-toggle {
+  border: 0;
+  background: var(--color-hall);
+  color: var(--color-muted-foreground);
+  padding: 4px 6px;
+  font-size: 15px;
+  font-style: italic;
+}
+.reading-lamp:active .lamp-chain { animation: chain-pull 180ms ease-out; }
+@keyframes chain-pull { 50% { transform: translateY(5px) rotate(4deg); } }
+@media (min-width: 640px) {
+  .reading-lamp { width: 90px; height: 102px; transform: scale(1); transform-origin: bottom right; }
+  .lamp-shade { left: 10px; top: 7px; width: 70px; height: 31px; }
+  .lamp-rim { left: 7px; top: 35px; width: 76px; }
+  .lamp-column { left: 44px; top: 38px; height: 48px; }
+  .lamp-foot { left: 27px; width: 38px; bottom: 7px; }
+  .lamp-chain { right: 10px; top: 36px; height: 30px; }
+  .lamp-pool { right: -32px; top: 28px; width: 165px; height: 112px; }
+}
+
+/* Receding stacks: atmosphere only, fading before the physical shelves. */
+.hall-main { position: relative; padding-bottom: 110px; }
+.hall-depth {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.13;
+  filter: blur(8px);
+  background:
+    repeating-linear-gradient(90deg, transparent 0 8%, oklch(0.09 0.012 160 / 80%) 8% 10%, transparent 10% 18%),
+    repeating-linear-gradient(0deg, transparent 0 150px, oklch(0.07 0.015 150 / 70%) 150px 162px, transparent 162px 270px);
+  transition: opacity 220ms ease;
+}
+.hall:has(.hall-closed) .hall-depth { opacity: 0; }
+.lights-out-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle 230px at calc(100% - 48px) 62%, oklch(0.62 0.08 128 / 18%) 0, oklch(0.08 0.015 155 / 83%) 68%, oklch(0.025 0.004 155 / 97%) 100%);
+  transition: opacity 500ms ease;
+}
+.lights-out-layer.active { opacity: 1; }
+.hall:has(.hall-closed) > header,
+.hall:has(.hall-closed) > footer,
+.hall:has(.hall-closed) .lamp-controls { z-index: 80; }
 
 /* Night shift: the hall sits a shade darker between 23:00 and 05:00 */
 .hall-night {

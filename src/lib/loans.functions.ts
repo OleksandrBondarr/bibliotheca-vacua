@@ -8,7 +8,7 @@ import { noteSignal } from "./reader.functions";
 import { NAME_REQUIRED } from "./profile.functions";
 import { noteChronicle } from "./chronicle.functions";
 
-const BOOK_JOIN = "book:books(id, title, author, kind, year, pages, department, shelf, review)";
+const BOOK_JOIN = "book:books(id, title, author, kind, year, pages, department, shelf, narrative, review)";
 
 type LoanBook = {
   id: string;
@@ -19,6 +19,7 @@ type LoanBook = {
   pages: number;
   department: string;
   shelf: string | null;
+  narrative: boolean;
   review: string | null;
 };
 
@@ -294,6 +295,7 @@ function shapeLoan(loan: {
       author: book.author,
       kind: book.kind,
       pages: book.pages,
+      narrative: book.narrative,
     },
   };
 }
