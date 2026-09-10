@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { addLemShelf, addShelf, fillMissingReviews, getShelfCounts, replaceReadingRoomShelf, rewriteReviewBatch } from "@/lib/admin.functions";
+import { addLemShelf, addShelf, expandShortLemReviews, fillMissingReviews, getShelfCounts, replaceReadingRoomShelf, rewriteReviewBatch } from "@/lib/admin.functions";
 import { DEPARTMENTS } from "@/lib/departments";
 import { Frame, Rule, buttonPrimary, buttonQuiet } from "@/components/library/Frame";
 
@@ -27,6 +27,7 @@ function AdminPage() {
   const lem = useServerFn(addLemShelf);
   const readingRoom = useServerFn(replaceReadingRoomShelf);
   const fill = useServerFn(fillMissingReviews);
+  const expandLem = useServerFn(expandShortLemReviews);
   const rewrite = useServerFn(rewriteReviewBatch);
   const [log, setLog] = useState<string[]>([]);
   const note = (s: string) => setLog((l) => [s, ...l].slice(0, 12));
@@ -100,6 +101,15 @@ function AdminPage() {
     onError: (e) => note(`Failed: ${e.message}`),
   });
 
+  const repairLem = useMutation({
+    mutationFn: () => expandLem(),
+    onSuccess: (r) => {
+      note(`${r.written} Lem reviews expanded to house length.`);
+      refresh();
+    },
+    onError: (e) => note(`Failed: ${e.message}`),
+  });
+
   const rewriteAll = useMutation({
     mutationFn: async () => {
       let offset = 0;
@@ -119,7 +129,7 @@ function AdminPage() {
   });
 
   const busy =
-    seed.isPending || addOne.isPending || addLem.isPending || addReadingRoom.isPending || fillReviews.isPending || rewriteAll.isPending;
+    seed.isPending || addOne.isPending || addLem.isPending || addReadingRoom.isPending || repairLem.isPending || fillReviews.isPending || rewriteAll.isPending;
 
   return (
     <Frame env="paper" narrow>
@@ -154,6 +164,9 @@ function AdminPage() {
             </button>
             <button type="button" disabled={busy} onClick={() => addReadingRoom.mutate()} className={buttonQuiet}>
               {addReadingRoom.isPending ? "Assembling…" : "Replace The Reading Room shelf"}
+            </button>
+            <button type="button" disabled={busy} onClick={() => repairLem.mutate()} className={buttonQuiet}>
+              {repairLem.isPending ? "Expanding…" : "Expand short Lem reviews"}
             </button>
             <button
               type="button"

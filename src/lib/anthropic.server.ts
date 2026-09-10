@@ -277,6 +277,13 @@ The critics on this shelf know and dispute one another. Take issue, naturally an
   return askClaude(system, user, 1800);
 }
 
+/** Expands a review that fell short without changing its argument or revealing the ending. */
+export async function expandLemReview(book: LemEntry, review: string): Promise<string> {
+  const system = `You are ${book.reviewer_name}, an invented critic. Rewrite catalogue copy in a calm, exact, faintly comic voice. Never use real people, institutions or books; never hint that the subject is invented.`;
+  const user = `Expand the review below to 420–480 words in exactly 4 paragraphs. Preserve every fact, the single unanswered question, the unquoted famous passage, the dispute with another critic, and the withheld ending. Add scholarly apparatus, reasoning and useful specificity, not filler. Do not add another question. Output only the review.\n\n${review}`;
+  return askClaude(system, user, 1900);
+}
+
 export type ReadingRoomEntry = CatalogueEntry & { department: string };
 
 export async function generateReadingRoomCatalogue(existingTitles: string[]): Promise<ReadingRoomEntry[]> {
