@@ -166,7 +166,7 @@ function AdminPage() {
               {addReadingRoom.isPending ? "Assembling…" : "Replace The Reading Room shelf"}
             </button>
             <button type="button" disabled={busy} onClick={() => repairLem.mutate()} className={buttonQuiet}>
-              {repairLem.isPending ? "Expanding…" : "Expand short Lem reviews"}
+              {repairLem.isPending ? "Normalising…" : "Normalise Lem review lengths"}
             </button>
             <button
               type="button"

@@ -225,7 +225,8 @@ export const expandShortLemReviews = createServerFn({ method: "POST" })
     let written = 0;
     let eligible = 0;
     for (const book of books ?? []) {
-      if (!book.review || book.review.trim().split(/\s+/).length >= 400) continue;
+      const wordCount = book.review?.trim().split(/\s+/).length ?? 0;
+      if (!book.review || (wordCount >= 400 && wordCount <= 500)) continue;
       eligible += 1;
       const publisher = book.publisher as unknown as { name: string; city: string; style_note: string | null } | null;
       const review = await expandLemReview({
