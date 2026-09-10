@@ -37,9 +37,12 @@ function audioContext() {
     master = context.createGain();
     master.gain.value = 1;
     master.connect(context.destination);
+    // Handle for automated sound checks; harmless in production.
+    (window as unknown as { __bvAudio?: unknown }).__bvAudio = { ctx: context, master };
   }
   return context;
 }
+
 
 /** Must be called from inside a user gesture; browsers start contexts suspended. */
 async function ensureRunning() {
