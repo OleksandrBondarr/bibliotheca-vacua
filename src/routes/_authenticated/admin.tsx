@@ -104,7 +104,7 @@ function AdminPage() {
   const repairLem = useMutation({
     mutationFn: () => expandLem(),
     onSuccess: (r) => {
-      note(`${r.written} of ${r.eligible} short Lem reviews expanded (${r.found} featured books checked).`);
+      note(`${r.written} of ${r.eligible} Lem reviews normalised (${r.found} featured books checked).`);
       refresh();
     },
     onError: (e) => note(`Failed: ${e.message}`),
