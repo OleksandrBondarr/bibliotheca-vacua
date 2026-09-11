@@ -1,13 +1,10 @@
 /**
- * Procedural library sounds, composed for Bibliotheca Vacua and dedicated to
- * the public domain under CC0 1.0.
+ * Sound for Bibliotheca Vacua.
  *
- * NOTE ON SOURCES: no audio files ship with this project and none ever have.
- * Every sound below is synthesised in the browser with the Web Audio API
- * (filtered noise and short oscillator gestures), so the download weight is
- * zero. Freesound.org downloads require an authenticated API token, which this
- * project does not hold; if recorded CC0 material is ever added, put the files
- * in /public/sound/ and record the freesound.org URLs here.
+ * The room ambience is a recorded loop shipped at /room-tone.mp3 (40 s,
+ * seamless, quiet rain and fire in a study). Small gestures — the stamp, a
+ * page turn, the lamp chain — are still synthesised in the browser with the
+ * Web Audio API, so they cost nothing to download.
  *
  * Audio is created only after the visitor explicitly enables it, on their own
  * click, so no autoplay policy is ever violated.
@@ -16,7 +13,9 @@ const SOUND_KEY = "bv-sound";
 
 let context: AudioContext | null = null;
 let master: GainNode | null = null;
-let ambience: { sources: AudioBufferSourceNode[]; gain: GainNode; timer: number } | null = null;
+let ambience: HTMLAudioElement | null = null;
+const AMBIENCE_SRC = "/room-tone.mp3";
+const AMBIENCE_VOLUME = 0.45;
 
 export function soundEnabled() {
   return typeof window !== "undefined" && window.localStorage.getItem(SOUND_KEY) === "1";
@@ -69,73 +68,50 @@ function noiseBuffer(ctx: AudioContext, seconds: number, smoothing = 0.985) {
   return buffer;
 }
 
-/** A quiet room: air, distant floorboards, the odd chair. Loops seamlessly. */
+/** A quiet room, from a recorded loop. Must be started from a user gesture. */
 export async function startAmbience() {
-  if (!soundEnabled()) return;
-  if (ambience) {
-    // Already built; a fresh gesture may be all it needs to be heard.
-    await ensureRunning();
+  if (!soundEnabled() || typeof window === "undefined") return;
+  if (!ambience) {
+    ambience = new Audio(AMBIENCE_SRC);
+    ambience.loop = true;
+    ambience.preload = "auto";
+    ambience.volume = 0;
+  }
+  try {
+    await ambience.play();
+  } catch {
+    /* the visitor can click again */
     return;
   }
-  const ctx = await ensureRunning();
-  const out = ctx.createGain();
-  out.gain.value = 0.0001;
-  out.connect(master!);
-  out.gain.exponentialRampToValueAtTime(0.5, ctx.currentTime + 1.2);
-
-  const sources: AudioBufferSourceNode[] = [];
-
-  // Room air: broad, very low band of noise.
-  const air = ctx.createBufferSource();
-  const airFilter = ctx.createBiquadFilter();
-  const airGain = ctx.createGain();
-  air.buffer = noiseBuffer(ctx, 12);
-  air.loop = true;
-  airFilter.type = "lowpass";
-  airFilter.frequency.value = 420;
-  airGain.gain.value = 0.42;
-  air.connect(airFilter).connect(airGain).connect(out);
-  air.start();
-  sources.push(air);
-
-  // A thin high layer, so the room is not only rumble.
-  const hiss = ctx.createBufferSource();
-  const hissFilter = ctx.createBiquadFilter();
-  const hissGain = ctx.createGain();
-  hiss.buffer = noiseBuffer(ctx, 9, 0.6);
-  hiss.loop = true;
-  hissFilter.type = "bandpass";
-  hissFilter.frequency.value = 2600;
-  hissFilter.Q.value = 0.7;
-  hissGain.gain.value = 0.05;
-  hiss.connect(hissFilter).connect(hissGain).connect(out);
-  hiss.start();
-  sources.push(hiss);
-
-  // Occasional life in the room: a footstep, a chair, a page somewhere.
-  const timer = window.setInterval(() => {
-    if (!soundEnabled() || !context) return;
-    const roll = Math.random();
-    if (roll < 0.4) footstep();
-    else if (roll < 0.7) playPageTurn();
-    else chair();
-  }, 6500);
-
-  ambience = { sources, gain: out, timer };
+  // Fade in, so the room does not arrive with a bump.
+  const target = AMBIENCE_VOLUME;
+  const step = target / 24;
+  const fade = window.setInterval(() => {
+    if (!ambience) return window.clearInterval(fade);
+    const next = ambience.volume + step;
+    if (next >= target) {
+      ambience.volume = target;
+      window.clearInterval(fade);
+    } else {
+      ambience.volume = next;
+    }
+  }, 50);
 }
 
 export function stopAmbience() {
   if (!ambience) return;
-  window.clearInterval(ambience.timer);
-  for (const s of ambience.sources) {
-    try {
-      s.stop();
-    } catch {
-      /* already stopped */
+  const element = ambience;
+  const fade = window.setInterval(() => {
+    const next = element.volume - 0.05;
+    if (next <= 0) {
+      element.volume = 0;
+      element.pause();
+      element.currentTime = 0;
+      window.clearInterval(fade);
+    } else {
+      element.volume = next;
     }
-  }
-  ambience.gain.disconnect();
-  ambience = null;
+  }, 40);
 }
 
 function noiseGesture(duration: number, volume: number, frequency: number, type: BiquadFilterType = "highpass") {
@@ -152,14 +128,6 @@ function noiseGesture(duration: number, volume: number, frequency: number, type:
   gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
   source.connect(filter).connect(gain).connect(master!);
   source.start();
-}
-
-function footstep() {
-  noiseGesture(0.16, 0.09, 180, "lowpass");
-}
-
-function chair() {
-  noiseGesture(0.4, 0.05, 900, "bandpass");
 }
 
 export function playPageTurn() {
