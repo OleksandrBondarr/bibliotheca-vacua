@@ -41,7 +41,9 @@ export function LibraryLamp({ closed, onPull }: { closed: boolean; onPull: () =>
     // A fresh page load has no gesture yet, so browsers keep audio suspended:
     // start the room again on the reader's first touch, click or key.
     void startAmbience();
-    const wake = () => void startAmbience();
+    const wake = () => {
+      if (soundEnabled()) void startAmbience();
+    };
     const opts = { once: true } as const;
     window.addEventListener("pointerdown", wake, opts);
     window.addEventListener("keydown", wake, opts);
