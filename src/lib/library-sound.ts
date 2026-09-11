@@ -69,6 +69,30 @@ function noiseBuffer(ctx: AudioContext, seconds: number, smoothing = 0.985) {
 }
 
 /** A quiet room, from a recorded loop. Must be started from a user gesture. */
+let fade: number | null = null;
+
+function fadeTo(target: number, done?: () => void) {
+  if (fade !== null) window.clearInterval(fade);
+  const element = ambience;
+  if (!element) return;
+  const step = target > element.volume ? 0.02 : -0.06;
+  fade = window.setInterval(() => {
+    if (!ambience) {
+      if (fade !== null) window.clearInterval(fade);
+      fade = null;
+      return;
+    }
+    const next = ambience.volume + step;
+    const finished = step > 0 ? next >= target : next <= target;
+    ambience.volume = finished ? target : Math.min(1, Math.max(0, next));
+    if (finished) {
+      if (fade !== null) window.clearInterval(fade);
+      fade = null;
+      done?.();
+    }
+  }, 40);
+}
+
 export async function startAmbience() {
   if (!soundEnabled() || typeof window === "undefined") return;
   if (!ambience) {
@@ -77,41 +101,34 @@ export async function startAmbience() {
     ambience.preload = "auto";
     ambience.volume = 0;
   }
+  if (!ambience.paused && ambience.volume >= AMBIENCE_VOLUME) return;
   try {
     await ambience.play();
   } catch {
-    /* the visitor can click again */
+    /* the visitor can tap again */
     return;
   }
-  // Fade in, so the room does not arrive with a bump.
-  const target = AMBIENCE_VOLUME;
-  const step = target / 24;
-  const fade = window.setInterval(() => {
-    if (!ambience) return window.clearInterval(fade);
-    const next = ambience.volume + step;
-    if (next >= target) {
-      ambience.volume = target;
-      window.clearInterval(fade);
-    } else {
-      ambience.volume = next;
-    }
-  }, 50);
+  fadeTo(AMBIENCE_VOLUME);
 }
 
 export function stopAmbience() {
-  if (!ambience) return;
+  if (fade !== null) {
+    window.clearInterval(fade);
+    fade = null;
+  }
   const element = ambience;
-  const fade = window.setInterval(() => {
-    const next = element.volume - 0.05;
-    if (next <= 0) {
+  if (!element) return;
+  fadeTo(0, () => {
+    element.pause();
+    element.currentTime = 0;
+  });
+  // If the fade cannot run for any reason, silence it outright.
+  window.setTimeout(() => {
+    if (!soundEnabled() && element) {
       element.volume = 0;
       element.pause();
-      element.currentTime = 0;
-      window.clearInterval(fade);
-    } else {
-      element.volume = next;
     }
-  }, 40);
+  }, 600);
 }
 
 function noiseGesture(duration: number, volume: number, frequency: number, type: BiquadFilterType = "highpass") {
